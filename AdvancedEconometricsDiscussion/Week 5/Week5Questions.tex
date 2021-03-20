@@ -1,0 +1,61 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage{import}
+\import{C:/Users/ryanj/Dropbox/code/LatexMacros/}{mymacros2.tex}
+
+\usetheme{metropolis}
+\usecolortheme[snowy]{owl}
+
+
+
+\title{ Week 5 Discussion Section Questions }
+%\subtitle{Question 5.19}
+\author{Ryan Martin}
+
+
+\begin{document}
+
+	\maketitle
+
+
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+
+	\section{Question 1}
+	
+\begin{frame}[allowframebreaks]{5.19}
+	Use the data in \texttt{cps4\_small.dat} to estimate the following wage equation:	$$\ln(WAGE) = \beta_1 + \beta_2 EDUC + \beta_3 EXPER + \beta_4 HRSWK  + e$$
+	
+	
+	
+	\begin{itemize}
+		\item[a] Report the regression results. Interpret the estimates for non-intercept terms. Are they significantly different from 0?
+
+
+	\item[b] Test the hypothesis that an extra year fo education increases the wage rate by at least 10\% against the alternative that is less than 10\%
+	
+	\item[c] Find a 90\% interval estimate for the percentage increase in wage from working an addtional hour per week
+	
+	\item[d] Re-estimate the model with the additional variables $EDUC \times EXPER$, $EDUC^2$ and $EXPER^2$. Report the results. Are the estimated coefficients significantly different from zero?
+
+	
+	\item[e] For the new model, find expressions for the marginal effects $\frac{\partial \ln (WAGE)}{ \partial EDUC}$ and $\frac{\partial \ln (WAGE)}{ \partial EXPER}$
+	
+		\item[f] Estimate the marginal effects $\frac{\partial \ln (WAGE)}{ \partial EDUC}$ for two workers Jill and Wendy. Jill has 16 years of education and 10 years of experience while Wendy ahs 12 years of education and 10 years of experience. What can you say about the marginal effect of education as education increases?
+		
+	\item[g] Test, as an alternative hypothesis, that Jill's marginal effect of education is greater than that of Wendy. Use a 5\% significance level.
+
+		
+	\item[h] Estimate the marginal effects $\frac{\partial \ln (WAGE)}{ \partial EXPER}$ for two workers Chris and Dave. Chris has 16 years of education and 20 years of experience while Wendy Dave has 16 years of education and 30 years of experience. What can you say about the marginal effect of experience as experience increases?
+	
+	\item[i] For someone with 16 years of education, find a 95\% interval estimate for the number of years of experience after which the marginal effect of experience becomes negative.
+
+	
+\end{itemize}
+
+\end{frame}
+
+
+
+
+\end{document}

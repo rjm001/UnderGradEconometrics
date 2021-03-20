@@ -1,0 +1,431 @@
+---
+title: "Chapter 7 Code"
+author: "Ryan Martin"
+date: "February 28, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Chapter 7 - Dummy Variables
+
+## Dummies on the RHS (Independent Variables)
+
+Note, stata calculates the marginal effects of a binary variable (Utown, for example) on the output variable (price, for example) as $$E(Price|Utown = 1) - E(Price|Utown=0)$$ If the binary is only an indicator, this is just it's coefficient. If there are interaction terms too, then these also matter. Note that a binary \{0,1 \} variable to any power is still just that binary variable.
+
+Hedonic Models - Characteristic space way before IO people thought of characteristic spaces. http://www.jstor.org/stable/1830899?seq=1#page_scan_tab_contents.
+
+Note, there is a "dummy variable trap". If have an indicator for all cases and an intercept, get exact collinearity. Have to omit one. Doesn't matter which (but people almost always keep the coefficient and all but 1 of the dummies)
+
+Dummy interacted with a continuous term is called a slope-indicator or a slope dummy variable
+
+Indicator Vars - a.k.a. dummy, binary or dichotomous
+
+### Chow Test
+Chow test is an F-test for the equivalence of two regressions. It's a really simple idea. Stick an indicator on the whole regression and do an F-test for the original vs the original plus an indicator times the original. 
+
+More concretely, suppose D is your indicator variable. Suppose you have $$y = reg_1 + e$$ where $reg_1 = \beta_1 + \beta_2 x_2 + \beta_3 x_3 + \dots + \beta_m x_m$. Note that $reg_1$ does not include the dummy variable. Then the Chow test also runs the regression $$y = reg_1 + D \times reg_1 + e$$. Call the first model the restricted and second model the unrestricted. Note that the number of terms that are forced to be 0 between the two models is $m$, not 1. So there are $J = m$ restrictions to the model. Look at $SSE_R$ and $SSE_U$. $K = 2\times m$. Do the F-test. This is a chow test. The null says we don't need to separte any part of reg 1's terms between the group D = 1 and the group with D = 0. The alternative says that there is at least one part of 
+
+*Note, this still assumes homoskedasticity between groups D = 1 and D = 0. Allowing for heteroskedasticity in the test done in chapter 8*
+
+### 7.3 Log-Linear Models with Indicators
+
+Suppose $log y = \beta_1 + \delta D + \beta_2 x_2$. Then, before we learned the interpretation of $\delta$ is that $100 \times \delta$ is the percent change in $y$ for a 1 unit change in x. This was an approximation, through the fact that $\%\Delta y / \Delta x \approx \frac{dy}{dx} \times \frac{1}{y}$. The derivative approximation is less good when the change in x is large. The change in an indicator variable is usually a large change, so the percent change approximation can often be poor for indicator variable coefficients. Instead, we get the exact percent change in wage in this example is simply $$100 \times \frac{Wage|_{D = 1} - Wage|_{D = 0}}{Wage|_{D = 0}} = 100 \times (e^{\delta} - 1)$$
+
+
+
+### 7.4 Linear Probability Model  (Dummies on the LHS (Dependent Var))
+
+Suppose y is either 1 or 0. Typically used to model choice between two (or more) products. Suppose each person the same, probability choose $y = 1$ is $p$ and probability choose $y = 0$ is $1 - p$. Then, $E(y) = P(y = 1) = p$. We can model $E(y) = p = \beta_1 + \beta_2 x_2 + \dots + \beta_K x_K$. This is called linear probability model. Two problems
+
+1. for some x's, p < 0 or p>1 is possible.  
+
+2. var(e) = var(y) = p(1 - p)$ from econ 41. but $$p(1 - p) = (\beta_1 + \beta_2 x_2 + \dots + \beta_K x_K)(1 - \beta_1 - \beta_2 x_2 - \dots - \beta_K x_K)$$ which depends on x. That is, variance of e depends on x, so this modeling choice requires heteroskedasticity, with variance largest when x values such that $\beta_1 + \beta_2 x_2 + \dots + \beta_K x_K \approx 1/2$. Skew distribution when x are such that $p \approx 1, 0$
+
+This model works best when x are s.t. p close to 1/2.
+
+### 7.5 Treatment Effects
+
+post hoc, ergo propter hoc - just because A happens before B does not mean A causes B.
+
+If treatment is not random, people may self-select in, causes bias in treated effect. e.g. if mostly people who are working hard at losing weight join an spinning class, the weight-loss effects of the spinning exercise class will likely be biased upward. vs if most people who go out surfing only pretend to want exercise but really just want to sit in the ocean chatting with their buddies away from ear shot of their spouses, surfings effect on weight loss will be underestimated (because most of these people aren't putting in the effort). No way to know the bias without knowing characteristics of the people in group. Have to tell a story. Story is circumstancial.
+
+If the errors fall into two classes, $e_1$ and $e_0$, the 1 type occuring when D = 1 and the 0 type occuring when D = 0, then (in treatment case) $$b_2 = \beta_2  + \frac{\sum (d_i - \bar{d})(e_i - \bar{e})}{\sum (d_i - \bar{d})^2} = \beta_2 + (\bar{e_1} - \bar{e_0})$$ where the first equality comes from the formula for $b_2$ from the formula sheet with $d_i$ plugged in for $x_i$ and the second from some tricky algebra shown in the appendix. The tricks include the fact that $d_i^2 = d_i$ since $d_i$ is 0 or 1. Then $b_2$ is consistent for $\beta_2$ if $E(\bar{e_1} - \bar{e_0}) = 0$. 
+
+*Can regress treatment indicator on the other covariates to see if there is any significant linear dependence between treatment and other vars.*
+
+
+#### 7.5.5 Diff-in-Diff - The most popular regression technique
+
+Use this when have two groups over time. Assume the control groups change is exactly what change the treated group would undergo if they weren't treated. The treatment effect is the difference between their actual post-treatment outcome and their assumed outcome if they had the same changes as the untreated/control group. Called Diff in diff, because it's the difference of two differences. 
+
+\begin{align*}
+\delta_{DD} & := \bar{y}_{treatment, after} - \bar{y}_{control, after} - (\bar{y}_{treatment, before} - \bar{y}_{control, before}) \\
+& = \bar{y}_{treatment, after} - \bar{y}_{treatment, before} - (\bar{y}_{control, after} - \bar{y}_{control, before})
+\end{align*}
+
+The first formula can be interpreted as "how much did treatment change the gap between treated and controlled." The second line can be interpreted as "How much more did the treated group change as compared to the untreated group". They are mathematically equivalent because of the distributive property.
+
+
+Can show, if do the regression $$y_{it} = \beta_1 + \beta_2 Treat_i + \beta_3 AFTER_t + \delta(Treat_i \times AFTER_t) + e_{it}$$ then $\delta$ is exactly the diff-in-diff estimator.
+
+Could just calculate diff-in-diff using sample means, but regression is probably easier.
+
+#### 7.5.7 Panel Data
+
+Time series is usually observation of one thing or a small collection of things over time. Panel is usually observing large collection of individuals over smaller time.
+
+Since we observe each individual repeatedly in panel data, we can estimate some individual fixed effects.
+
+# 7.9
+
+In the STAR experiment (Section 7.5.3), children were randomly assiged within schools into three types of c lasses: small classes with 13-17 students, regular-sized classes with 22-25 students, and regular-sized classes with a full-time teacher aide to assist the teacher. Student scores on acheievement tests were recorded, as was some information about the students, teachers and schools. Data e kindergarten classes is contained in the data file \texttt{star.dat}
+	
+
+### a 
+
+Calculate the average of TOTALSCORE for (i) students in regular-sized classrooms with full time teachers, but no aide; (ii) students in regular-sized classrooms with full time teachers and an aide; and (iii) students in small classrooms. What do you observe about test scores in these three types of learning environments?
+
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "star.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+attach(dat)
+
+
+#averages
+mean( totalscore[  (small == 0)&(aide == 0) ]) 
+mean( totalscore[ (small==0)&(aide==1) ] )
+mean( totalscore[ (small==1) ])
+```
+
+		
+		
+### b
+
+Estimate the regression model $$TOTALSCORE_i = \beta_1 + \beta_2 SMALL_i + \beta_3 AIDE_i + e_i$$
+
+```{r}
+reg_out <- lm(totalscore ~ small + aide) #note, no interaction
+    #because never have small and an aide
+summary(reg_out)
+
+#note same results here from regression
+
+reg_out$coefficients[1] + reg_out$coefficients[2] #small classroom
+    #no aide
+
+reg_out$coefficients[1]    #regular no aid classroom
+
+reg_out$coefficients[1] + reg_out$coefficients[3] 
+    #regular with aid classroom
+
+```
+
+
+### c
+
+Use a t-test to test the hypothesis $H_0: \beta_2 \ge 1$ against the alternative $H_1: \beta_2 < 1$
+
+```{r}
+s <- summary(reg_out)
+t.stat <- (coef(s)[2,1]- 1 )/coef(s)[2,2]
+t.c <- qt(.95, s$df[2])
+t.c 
+t.stat #reject null
+```
+
+		
+### c
+
+To the regression in (b) add the additional explanatory variable TCHEXPER. Is this variable statistically significant? Does its addition to the model affect the estimates of $\beta_2$ and $\beta_3$?
+
+```{r}
+reg_out2 <- lm(totalscore ~ small + aide + tchexper) 
+summary(reg_out2)
+
+```
+Note, aide remains statistically insignificant, but now has switched signs to be a negative impact on scores! Teacher experience is positive and statistically significant, but practically insignificant (1.5 point impact only). The strength of small has now also increased, suggesting that many of the smaller classrooms are taught by inexperienced teachers. A quick check of the correlation between small and tchexper should verify this.
+
+```{r}
+cor(small, tchexper, use = "pairwise.complete.obs")
+  #as anticipated, slightly negative
+```
+
+		
+### d
+
+To the regression in (c) add the additional explanatory variables BOY, FREELUNCH and WHITE_ASIAN. Are any of these variables statistically significant? Does their addition to the model affect the estimates of $\beta_2$ and $\beta_3$?
+
+```{r}
+reg_out3 <- lm(totalscore ~ small + aide + tchexper + boy + freelunch
+              + white_asian) #note, no interaction
+    #because never have small and an aide
+summary(reg_out3)
+
+```
+All these new variables are statistically significant. The (still) statistically insignificant "aide" has swithced sign again (but is still very small). Small gets slightly reduced by its inclusion, suggesting the smaller classrooms either had more white/asian students, slightly less boys or slightly less freelunchs (or some combination)
+
+```{r}
+lm(small ~ freelunch + boy + white_asian + tchexper + aide)
+```
+
+		
+### e
+
+To the regression in (d), add the additional explanatory variables TCHWHITE, TCHMASTERS, SCHURBAN and SCHRURAL. Are any of these variables statistically significant? Does their addition to the model affect the estimates of $\beta_2$ and $\beta_3$?
+
+```{r}
+reg_out4 <- lm(totalscore ~ small + aide + tchexper +
+                 boy + freelunch + white_asian + 
+                 tchwhite + tchmasters + schurban + schrural)
+summary(reg_out4)
+
+```
+Of the newly added variables, only `tchmasters` is not statistically significant (but its almost). Given the rest of the model, a teacher with a masters degree (surprisingly?) lowers test scores. suburb schools do the best, with rural and urban schools below (unsurprisingly). The teacher being white seems to significantly lower scores by nearly 8 points, on average. Still, the most (practically) significant term is freelunch. small's effect remains close to all of its previous estimates, near 14.
+		
+### f
+
+Discuss the importantce of parts (c), (d) and (e) to our estimation of the ``treatment'' effects in part(b).
+
+*Solution* The inclusion of our controls (a.k.a. covariates or other dependent variables that aren't treatment effects) didn't impact our estimate of the "treatment" effect much at all. This is because all of our controls/covariates are relatively uncorrelated with treatment. If there were a control that were strongly colinear with small, we would expect it to take away from small's estimate.
+
+
+		
+### g
+
+Add to the models in (b) through (e) indicator variables for each school.
+$$SCHOOL_{j} = \begin{cases} 1 \text{ if student is in school } j \\ 0 \text{ otherwise} \end{cases}$$ Test the significance of these school ``fixed effects.'' Does the inclusion of these fixed effect indicator variables substantially alter the estimate of $\beta_2$ and $\beta_3$ 
+		
+
+```{r}
+
+
+reg_out_sfe <- lm(totalscore ~ small + aide + schid)
+summary(reg_out_sfe)
+
+reg_out2_sfe <- lm(totalscore ~ small + aide + tchexper +
+                 schid)
+summary(reg_out2_sfe)
+
+reg_out3_sfe <- lm(totalscore ~ small + aide + tchexper +
+                 boy + freelunch + white_asian+schid)
+summary(reg_out3_sfe)
+
+reg_out4_sfe <- lm(totalscore ~ small + aide + tchexper +
+                 boy + freelunch + white_asian + 
+                 tchwhite + tchmasters + schurban + schrural+
+                   schid)
+summary(reg_out4_sfe)
+
+length(unique(schid)) #79 schools
+nrow(dat) #5786 classroom observations
+
+```
+
+We see that adding the school fixed effects doesn't change the estimated treatment effect either
+
+		
+# 7.2
+
+In September 1998, a local TV station contacted an econometrician to analyze some data for them. They were going to do a Halloween story on the legend of full mons' affecting behavior in strange ways. They collected data from a local hospital on emergency room cases for the period from January 1, 1998 until mid-August. There were 229 observations (days). During this time, there were eight full moons and seven new moons ( a related myth concerns new moons) and three holidays (NYD, Memorial Day and Easter). If there is a full-moon effect, then hospital administrators will adjust numbers of emergency room doctors and nurses and local police may change the number of officers on duty. (This sounds like a very 90s era question.)
+	
+	Using the data in the file \texttt{fullmoon.dat} we obtain the regression results in the following table: T is a time trend (T = 1, 2, 3, ..., 229) and the rest are indicator variables. $HOLIDAY = 1$ if the day is a holiday; 0 otherwise. $NEWMOON = 1$ if there is a new moon; 0 otherwise.
+	
+![New Moon and Full Moon Included](TableMoonReg.png)
+
+
+### a
+
+Interpret these regression results. When should emergency rooms expect more calls?
+
+*Solution* from this data, holidays seem to have the largest effect on emergency rooms. (As an aside, note that the most dangerous days to drive are new years day - which includes the 3am drives home from new year's eve parties - and Memorial Day). The weekend also drives up incidences. Fullmoon and newmoon have positive, but statistically insignificant coefficients. So, the evidence isn't strong enough to confirm that fullmoons or newmoons cause problems, separately.
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "fullmoon.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+attach(dat)
+library(Hmisc)
+describe(dat) #closer to Stata's tabulate
+  #note, only 3 holidays in 229 observations. should be wary of that
+  #8 full moons, 33 friday and saturdays ,7 newmoons
+
+
+
+```
+
+		
+### b
+
+		
+![New Moon and Fullmoon omitted](TableMoonReg2.png)
+
+
+The model was reestimated omitting the variables FULLMOON and NEWMOON, as shown in Figure 2. Comment on any changes you observe.
+
+
+*Solution*
+
+Regression results seem pretty much unchanged after dropping fullmoon and newmoon.
+		
+### c
+
+Test the joint significance of FULLMOON and NEWMOON. State the null and alternative hypotheses and indicate the test statistic you use. What do you conclude?
+
+*Solution*
+The null is that Fullmoon and Newmoon both have 0 coefficients (or do not influence emergency room incidents). The alternative is that at least one of them does.
+
+```{r}
+SSE_R = 27424.19
+J = 2
+N = nrow(dat)
+K = 7
+SSE_U = 27108.82
+F.stat = (SSE_R - SSE_U)*(N - K)/ J / SSE_U
+F.stat  
+F.c = qf(.95, J, N-K)
+F.c
+```
+Fail to reject the null. Given the data, neither is likely to have an influence.
+
+# 7.14
+	
+Professor Ray C. Fair's voting model was introduced in Exercise 2.14. He builds models that explain and predict the U.S. presidential elections. See his website at \url{http://fairmodel.econ.yale.edu/vote2008/index2.htm}. The basic premise of the model is that the incumbent party's share of the two-party popular vote is affected by a number of factors relating to the economy and variables relating to the politics, such as how long the incumbent party has been in power and whether the president is running for reelection. Fair's data, 33 observations for the election years from 1880 to 2008, are in the file \texttt{fair4.dat}. The dependent variable is VOTE = percentage share of the popular vote won by the incumbent party. The explanatory variables include:
+	\begin{itemize}
+		\item PARTY: Binary variable that's either 1 or -1. 1 if Democratic incumbent, -1 if Republican.
+		\item PERSON: binary (0-1), 1 if incumbent is runing for (re)election.
+		\item DURATION: discrete variable. 0 if the incumbent party has been in power for one term, 1 if the incumbent party has been in power for two consecutive terms, 1.25 if the incumbent has been in power for three consecutive terms, 1.50 for four, etc.
+		\item WAR. binary (0-1). 1 in 1920, 1944, 1948. 0 otherwise
+		\item GROWTH: growth rate of real per capita GDP in the first 3 quarters of the election year (annual rate). 
+		\item INFLATION: absolute value of the growth rate of GDP deflator in first 15 quarters of the administration (annual rate) except for 1920, 1944 and 1948 (where values are 0).
+		\item GOODNEWS: The number of quarters in the first 15 quarters of the administration in which the growth rate of real per capita GDP is greater than 3.2\% at an annual rate, except for 1920, 1944 and 1948, where the values are 0.
+\end{itemize}
+
+### a
+
+Consider the model 
+
+\begin{align*}
+VOTE & = \beta_1 + \beta_2 GROWTH + \beta_3INFLATION + \beta_4 GOODNEWS + \beta_5 PERSON + \\
+& \hspace*{1cm} \beta_6 DURATION + \beta_7 PARTY + \beta_8 WAR + e
+\end{align*}
+
+Discuss the anticipated effects of the dummy variables PERSON and WAR
+
+*Solution* We expect the effect of person to be positive. It is well known that incumbents have an advantage in elections. We know that, of the three election years with war in this data, the incumbent party lost once (1920) and won twice (1940s). So, the program will estimate war's coefficient to be positive (and probably statistically insignificant since so few observations where war = 1)
+
+### b
+
+The binary variable PARTY is somewhat different from the dummy variables we have considered. Write out the regression function E(VOTE) for the two values of PARTY. Discuss the effects of this specification.
+
+*Solution* Party is -1 or 1 rather than 0 or 1. So, this makes it so that the difference between the two is $2 \times \beta_7$ rather than just $\beta_7$ in the original specification. This just affects our interpretation. 
+
+More formally,
+
+\begin{align*}
+E(VOTE | PARTY = 1) & - E(VOTE | PARTY = 0) =\\
+& = \beta_7 \times 1 - ( \beta_7 \times -1 ) \\
+& = 2 \beta_7
+\end{align*}
+
+and all the other terms cancel
+
+### c
+
+Use the data for the period 1916-2004 to estimate the proposed model. Discuss the estimation results. Are the signs as expected? Are the estimates statistically significant? How well does the model fit the data? 
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "fair4.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+attach(dat)
+library(Hmisc)
+describe(dat) #closer to Stata's tabulate
+  #note, only 3 holidays in 229 observations. should be wary of that
+  #8 full moons, 33 friday and saturdays ,7 newmoons
+
+reg_out <- lm(vote ~ growth + inflation + goodnews + person +
+                duration + party + war)
+s <- summary(reg_out)
+s
+```
+
+As expected, war and person both have a positive sign. Also as expected, war is not significant (probably due to such few observations). Surprisingly, person is not significant. Parties negative coefficient says that republicans have a relatively stronger predicted probability of staying in power than democrats over the time period
+
+	
+### d
+
+Predict the outcome of the 2008 election using the given 2008 data for values of the explanatory variables. Based on the prediction, would you have picked the outcome of the election correctly?
+
+*Solution* Prediction just has us plugging in 2008 election values to our regression output. Since there are many, I will let the computer do it automatically. We predict the incumbent will get less than .50 percent of the popular vote (which was correct in 2008, GWB lost and Obama won, switching parties.). (Note that we did use this data to estimate it too! It might be more honest to drop the 2008 data and fit it without, then try to see if we can still get it right!). 
+
+```{r}
+predict(reg_out, newdata = dat[dat$year=="2008",], 
+        interval = "confidence")
+
+predict(reg_out, newdata = dat[dat$year=="2008",], 
+        interval = "prediction")
+
+```
+
+	
+### e
+
+Construct a 95\% prediction interval for the outcome of the 2008 election. 
+
+*Solution* Prediciton interval was calculated above.
+	
+### f
+
+Using data values of your choice (you must explain them), predict the outcome of the 2012 election.
+
+*Solution* This is a bonus one. You can look up the data if you want. a lot is online through government websites, but it's usually time-consuming to find, download and clean.
+
+# Chapter 7 New Stata Code
+
+```{r, eval=F, echo=T}
+!missing
+areg
+  - regression that automatically absorbs/suppresses
+  - some of the outputs. do when have a large dummy variable
+  - collection where not concerned about their coefficient estimates
+areg varlist, absorb var
+  - reg on varlist, subpresses output of vars
+esttab
+  - creates table, see below
+tabulate
+  - summary table
+tabul varname, gen()
+pwcorr
+  - calculates pairwise correlations
+  - almost same as corr, difference in
+  - how treats missing variables.
+global
+  - create a variable that can be inserted into
+  - multiple data collections, with $. p.231
+
+
+
+// when in doubt, can always use, e.g.
+// help areg
+
+
+//examples
+esttab model1 model2 model3 model4, se(%12, 3f) b(%12, 3f) ///
+star(*.10 ** .05 *** .0) gaps ar2 bic scalars(rss) ///
+  title("Project Star: Kindergarden")
+// creates table ith 4 models with coefficients and standard errors
+// sets signifiacnace stars as described
+
+// see also
+//help estout
+
+```

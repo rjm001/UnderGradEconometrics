@@ -1,0 +1,412 @@
+capture log close
+
+*===============================================================================
+* Date: Jan 22, 2018
+* By: Conor Foley
+* 
+* This code walks through the demonstration problems for Discussion Questions in
+* week 3 of Econ 103 - Introduction to Econometrics, taught by Professor Rojas
+* 
+* Textbook is: Principles of Econometrics 4th Edition (Hill, Griffith, and Lim)
+*
+* Covered Problems: 3.6, 4.13
+*
+* Note that this text will not appear in the log file, since it all comes before
+* we initiated the log
+*
+* If you want to run this program, you will need the following .dta files to
+* to be located in STATA's working directory:
+* (1) motel.dta (2) stockton2.dta
+*
+* THIS "SKELETON" VERSION OF THE CODE IS DESIGNED TO BE A MINIMAL VERSION:
+*	(1) IT IS DESIGNED TO BE EASY TO FOLLOW ALONG IN CLASS. IT DOES NOT 
+*		IMPLEMENT BEST PRACTICES
+*	(2) THE CODE IS DESIGNED TO MAKE COPY-PASTING COMMANDS AS SIMPLE AS POSSIBLE
+*       --> each sub-question can (e.g. 3.16 Part D) is self-contained, assuming
+*           you have the appropriate data set loaded
+*	(3) IT DOES NOT PRODUCE ANY FIGURES
+*
+*===============================================================================
+
+log using wk3_section_skeleton_log, replace
+
+// Demonstration STATA code for week 3
+// Principles of Econometrics 4th Edition
+// Covered Problems: 3.6, 4.13
+
+set more off
+clear all
+
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////// Question 3.6 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+********************************************************************************
+*Setup: We consider data on a motel that underwent repairs to fix defects in 
+* some of the rooms. It took seven months to correct the defects, during which 
+* approximately 14 rooms in the 100-unit motel were taken out of service for one
+* month at a time. The data are in motel.dta 
+*
+* Parts (A) - (F)
+********************************************************************************
+
+use motel.dta, clear
+
+********************************************************************************
+*3.6 Part A: In the linear regression model MOTEL_PCT = beta1 + beta2*COMP_PCT + e, 
+* test the null hypothesis H0: beta2 <= 0 against the alternative hypothesis
+* H1: beta2 > 0 at alpha = 0.01 level of significance. Discuss your conclusion. 
+* Include in your answer a sketch of the rejection region and a calculation of 
+* the p-value.
+********************************************************************************
+
+desc motel_pct comp_pct
+reg motel_pct comp_pct
+
+scalar criticalT_01_1side = invttail(e(df_r),0.01)
+disp "Alpha = 0.01 Critical T-Value for RHS rejection region, DF = " e(df_r) ": " criticalT_01_1side
+
+scalar pval = ttail(23,_b[comp_pct]/_se[comp_pct])
+disp "P-Value for H0: beta2 <= 0 vs. H1: beta2 > 0, DF = " e(df_r) ": " pval
+
+********************************************************************************
+*3.6 Part B: Consider a linear regression with y = MOTEL_PCT and x = RELPRICE, 
+* which is the ratio of the price per room charged by the motel in question relative
+* to its competitors. Test the null hypothesis that there is no relationship
+* between these variables against the alternative that there is an inverse
+* relationship between them at the alpha = 0.01 level of significance. Discuss
+* your conclusion. Include in your answer a sketch of the rejection region, and
+* a calculation of the p-value. In this exercise follow and SHOW all the test
+* procedure steps suggested in Chapter 3.4
+********************************************************************************
+
+reg motel_pct relprice
+
+scalar criticalT_01_1side = invttail(e(df_r),0.01)
+disp "Alpha = 0.01 Critical T-Value for LHS rejection region, DF = " e(df_r) ": " (-1)*criticalT_01_1side
+
+scalar pval = 1-ttail(e(df_r),_b[relprice]/_se[relprice])
+disp "P-Value for H0: beta2 >= 0 vs. H1: beta2 < 0, DF = " e(df_r) ": " pval
+
+********************************************************************************
+*3.6 Part C: Consider the linear regression MOTEL_PCT = delta1 + delta2*REPAIR + e
+* where REPAIR is an indicator variable taking the value 1 during the repair
+* period and 0 otherwise. Test the null hypothesis H0: delta2 >= 0 against the 
+* alternative hypothesis H1: delta2 < 0 at the alpha = 0.05 level of 
+* significance. Explain the logic behind stating the null and alternative 
+* hypotheses in this way. Discuss your conclusions.
+********************************************************************************
+
+reg motel_pct repair
+
+sum motel_pct if repair == 0
+lincom repair + _cons
+sum motel_pct if repair == 1
+
+scalar criticalT_05_1side = invttail(e(df_r),0.05)
+disp "Alpha = 0.05 Critical Value for t-test w/ LHS rejection region, DF = " e(df_r) ": " (-1)*criticalT_05_1side
+disp "T-stat for H0: delta2 (>)= 0: " _b[repair]/_se[repair]
+
+********************************************************************************
+*3.6 Part D: Using the model given in part (c), construct a 95% interval estimate
+* for the parameter delta2 and give its interpretation. Have we estimated the
+* effect of the repairs on motel occupancy relatively precisely, or not? Explain.
+********************************************************************************
+
+reg motel_pct repair
+scalar criticalT_05_2side = invttail(e(df_r),0.05/2)
+scalar ciLow_repair = _b[repair]-criticalT_05_2side*_se[repair]
+scalar ciHigh_repair = _b[repair]+criticalT_05_2side*_se[repair]
+disp "95% Confidence Interval: [" ciLow_repair ", " ciHigh_repair "]"
+
+********************************************************************************
+*3.6 Part E: Consider the linear regression model with y = MOTEL_PCT - COMP_PCT 
+* and x = REPAIR that is (MOTEL_PCT - COMP_PCT) = gamma1 + gamma2*REPAIR + e. 
+* Test the null hypothesis that gamma2 = 0 against the alternative that 
+* gamma2 < 0 at the alpha = 0.01 level of significance. Discuss the meaning of 
+* the test outcome.
+********************************************************************************
+
+gen pct_diff = motel_pct - comp_pct
+reg pct_diff repair
+
+scalar criticalT_01_1side = invttail(e(df_r),0.01)
+disp "Alpha = 0.01 Critical Value for LHS rejection region t-test, DF = " e(df_r) ": " (-1)*criticalT_01_1side
+
+sum pct_diff motel_pct
+bysort repair: sum pct_diff motel_pct
+
+********************************************************************************
+*3.6 Part F: Using the model in part (e), construct and discuss the 95% interval
+* estimate of gamma2.
+********************************************************************************
+
+capture drop pct_diff
+gen pct_diff = motel_pct - comp_pct
+
+// See the regression table for the 95% confidence interval
+reg pct_diff repair
+
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////// Question 4.13 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+********************************************************************************
+*Setup: Consider data on 880 houses sold in Stockton, CA during mid-2005
+*
+* Parts (A) - (H)
+********************************************************************************
+
+use stockton2.dta, clear
+
+********************************************************************************
+*4.13 Part A: Estimate the log-linear model in ln(PRICE) = beta1 + beta2*SQFT + e. 
+* Interpret the estimated model parameters. Calculate the slope and elasticity
+* at the sample means, if necessary.
+********************************************************************************
+
+gen ln_price = log(price)
+reg ln_price sqft
+
+// Slope: since y = exp(sigma^2/2)*exp(b1 + b2*x), we have
+// --> dy/dx = exp(sigma^2/2)*exp(b1+b2*x)*b2 = y*b2
+// --> Manually enter mean of price = 112810.8
+lincom 112810.8*_b[sqft]
+// Elasticity: Given our model, dlny/dlnx = (x/y)*(dy/dx) = x*b2
+// --> Manually enter mean of sqft = 1611.968
+lincom 1611.968*_b[sqft]
+
+// Calculate elasticity using margins command
+margins, dyex(sqft) atmeans
+
+/* Using STATA to calculate mean(price) and mean(sqft):
+
+qui sum sqft
+scalar mean_sqft = r(mean)
+qui sum price
+scalar mean_price = r(mean)
+
+lincom `=mean_price'*_b[sqft]
+lincom `=mean_sqft'*_b[sqft]
+
+*/
+
+********************************************************************************
+*4.13 Part B: Estimate the log-log model ln(PRICE) = beta1 + beta2*ln(SQFT) + e.
+* Interpret the estimated parameters. Calculate the slope and elasticity at the
+* sample means, if necessary.
+********************************************************************************
+
+capture gen ln_price = log(sqft)
+gen ln_sqft = log(sqft)
+reg ln_price ln_sqft
+
+// In a log-log model, the beta coefficent corresponds to an elasticity, so we 
+// don't need to do any more calculation for that. 
+// The formula for slope dy/dx can be found by noting that 
+// y = exp(b1+b2*ln(x)) = exp(b1)*x^b2 
+// --> dy/dx = exp(b1)*b2*x^(b2-1) = (y/x)*b2
+// --> manually enter mean of price = 112810.8 and mean of sqft = 1611.968
+
+lincom (112810.8/1611.968)*_b[ln_sqft]
+
+/* Using STATA to calculate mean(price) and mean(sqft):
+
+qui sum sqft
+scalar mean_sqft = r(mean)
+qui sum price
+scalar mean_price = r(mean)
+lincom `=mean_price'/`=mean_sqft'*_b[ln_sqft]
+
+*/
+
+********************************************************************************
+*4.13 Part C: Compare the R2 value from the linear model PRICE = beta1 + beta2*SQFT + e
+* to the "generalized" R2 measure for the models in (b) and (c).
+********************************************************************************
+
+// Linear Model
+qui reg price sqft
+capture predict price_hat_lin, xb
+
+// Log-Linear Model
+capture gen ln_price = log(price)
+qui reg ln_price sqft
+capture predict ln_price_hat_loglin, xb
+capture gen price_hat_loglin = exp(ln_price_hat_loglin)
+capture gen price_hat_loglin_adju = price_hat_loglin*exp(e(rmse)^2/2)
+
+// Log-Log Model
+capture gen ln_price = log(price)
+capture gen ln_sqft = log(sqft)
+qui reg ln_price ln_sqft
+capture predict ln_price_hat_loglog, xb
+capture gen price_hat_loglog = exp(ln_price_hat_loglog)
+capture gen price_hat_loglog_adju = price_hat_loglog*exp(e(rmse)^2/2)
+
+corr price price_hat_lin price_hat_loglin price_hat_loglog price_hat_loglin_adju price_hat_loglog_adju
+// --> The correlations that we care about are the values in the first column
+//     in rows 2 and on.
+
+// View Results, taking numbers reported by corr and "manually" telling STATA
+// to square them
+disp "R2 - Linear: " 0.8198^2
+disp "R2 - Log-Linear: " 0.8455^2
+disp "R2 - Log-Log: " 0.8201^2
+
+********************************************************************************
+*4.13 Part D: Construct histograms of least squares residuals from each of the 
+* models in (a), (b), and (c) and obtain the Jarque-Bera statistics. Based on 
+* your observations, do you consider the distributions of the residuals to be 
+* compatible with an assumption of normality?
+********************************************************************************
+
+// Linear
+qui reg price sqft
+capture predict residual_lin, residual
+
+// Log-Linear
+capture gen ln_price = log(price)
+capture gen ln_sqft = log(sqft)
+qui reg ln_price ln_sqft
+capture predict residual_loglin, residual
+
+// Log-Log
+capture gen ln_price = log(price)
+capture gen ln_sqft = log(sqft)
+qui reg ln_price ln_sqft
+capture predict residual_loglog, residual
+
+// Calculate the Jarque-Bera statistic for each variable
+sum residual_loglin, detail
+scalar jb_loglin = (r(N)/6)*(r(skewness)^2 + ((r(kurtosis)-3)^2)/4)
+
+sum residual_loglog, detail
+scalar jb_loglog = (r(N)/6)*(r(skewness)^2 + ((r(kurtosis)-3)^2)/4)
+
+sum residual_lin, detail
+scalar jb_lin = (r(N)/6)*(r(skewness)^2 + ((r(kurtosis)-3)^2)/4)
+
+// The distribution for the Jarque-Bera statistic is Chi Square w/ 2 degrees of
+// freedom, so for each of these we can also calculate a p-value using the
+// 1 minus the Chi Square (2) CDF
+
+disp "JB Stat - Linear: " jb_lin ", (p-value = " 1 - chi2(2,jb_lin) ")"
+disp "JB Stat - Log Linear: " jb_loglin ", (p-value = " 1 - chi2(2,jb_loglin) ")"
+disp "JB Stat - Log Log: " jb_loglog ", (p-value = " 1 - chi2(2,jb_loglog) ")"
+
+/* Optional: Generate histograms
+
+hist residual_lin, kdensity
+
+hist residual_loglin
+
+hist residual_lin
+
+*/
+
+********************************************************************************
+*4.13 Part E: For each of the models in (a)-(c), plot the least squares residuals
+* against SQFT. Do you observe any patterns?
+********************************************************************************
+
+/* Optional: Generate figures based on residuals calculated in Part D
+
+gen zero_val = 0
+
+twoway (scatter residual_lin sqft) (line zero_val sqft, lcolor(black))
+
+twoway (scatter residual_loglin sqft) (line zero_val sqft, lcolor(black))
+
+twoway (scatter residual_loglog sqft) (line zero_val sqft, lcolor(black))
+
+*/
+
+********************************************************************************
+*4.13 Part F: For each of the models in (a)-(c), predict the value of a house 
+* with 2700 square feet.
+********************************************************************************
+
+//It turns out that observations 556 and 668 had values of sqft == 2700, so
+// if you already calculated fitted values for price, the estimate for 2700 will
+// be stored in those rows.
+// --> you can confirm this by running the command: list sqft if sqft == 2700
+
+list price_hat_lin price_hat_loglin_adju price_hat_loglog_adju in 556
+
+/* Optional: Calculate fitted values here
+
+// Linear Model
+qui reg price sqft
+capture predict price_hat_lin, xb
+
+// Log-Linear Model
+capture gen ln_price = log(price)
+qui reg ln_price sqft
+capture predict ln_price_hat_loglin, xb
+capture gen price_hat_loglin = exp(ln_price_hat_loglin)
+capture gen price_hat_loglin_adju = price_hat_loglin*exp(e(rmse)^2/2)
+
+// Log-Log Model
+capture gen ln_price = log(price)
+capture gen ln_sqft = log(sqft)
+qui reg ln_price ln_sqft
+capture predict ln_price_hat_loglog, xb
+capture gen price_hat_loglog = exp(ln_price_hat_loglog)
+capture gen price_hat_loglog_adju = price_hat_loglog*exp(e(rmse)^2/2)
+
+*/
+
+********************************************************************************
+*4.13 Part G: For each model in (a)-(c), construct a 95% prediction interval for 
+* the value of a house with 2700 square feet.
+********************************************************************************
+
+// The critical value for this prediction interval is approximately 1.9627
+// Calculated as:
+scalar criticalT_05_2side = invttail(e(df_r),0.05/2)
+
+// Note that we use the stdf option for predict, and NOT the stdp option
+
+// If you haven't calculated the fitted values yet, you can do so in Part C above
+// or by using the "optional" section in Part F
+
+// Linear Model
+qui reg price sqft
+capture predict stdf_lin, stdf
+capture gen cilow_price_hat_lin = price_hat_lin - 1.9627*stdf_lin
+capture gen cihigh_price_hat_lin = price_hat_lin + 1.9627*stdf_lin
+
+// Log-Linear Model
+capture gen ln_price = log(price)
+qui reg ln_price sqft
+capture predict stdf_loglin, stdf
+
+capture gen cilow_price_hat_loglin = exp(ln_price_hat_loglin - 1.9627*stdf_loglin)
+capture gen cihigh_price_hat_loglin = exp(ln_price_hat_loglin + 1.9627*stdf_loglin)
+
+// Log-Log Model
+capture gen ln_price = log(price)
+capture gen ln_sqft = log(sqft)
+qui reg ln_price ln_sqft
+capture predict stdf_loglog, stdf
+
+capture gen cilow_price_hat_loglog = exp(ln_price_hat_loglog - 1.9627*stdf_loglog)
+capture gen cihigh_price_hat_loglog = exp(ln_price_hat_loglog + 1.9627*stdf_loglog)
+
+// Use list to display the confidence intervals in row 556 (where sqft == 2700)
+disp "95% Confidence Interval for price_hat(sqft = 2700) - Linear: "
+list cilow_price_hat_lin cihigh_price_hat_lin in 556
+disp "95% Confidence Interval for price_hat(sqft = 2700) - Log-Linear: "
+list cilow_price_hat_loglin cihigh_price_hat_loglin in 556
+disp "95% Confidence Interval for price_hat(sqft = 2700) - Log-Log: "
+list cilow_price_hat_loglog cihigh_price_hat_loglog in 556
+
+********************************************************************************
+*4.13 Part H: Based on your work in this problem, discuss the choice of functional
+* form. Which functional form would you use? Explain.
+********************************************************************************
+
+translate wk3_section_skeleton_log.smcl "Week 3 TA Section STATA - Skeleton.pdf"
+
+log close

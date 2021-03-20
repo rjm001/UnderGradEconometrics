@@ -1,0 +1,446 @@
+capture log close _all
+
+*===============================================================================
+* Date: Feb 5, 2018
+* By: Conor Foley
+* 
+* This code walks through the demonstration problems for Discussion Questions in
+* week 5 of Econ 103 - Introduction to Econometrics, taught by Professor Rojas
+*
+* Textbook is: Principles of Econometrics 4th Edition (Hill, Griffith, and Lim)
+*
+* Covered Problems: 5.19
+*
+* Note that this text will not appear in the log file, since it all comes before
+* we initiated the log
+*
+* If you want to run this program, you will need the following .dta files to
+* to be located in STATA's working directory:
+* (1) cps4_small.dta
+*
+*===============================================================================
+
+// Since we are using multiple log files, we need to use the "name" option so
+// STATA can refer to different log files in the do file.
+log using wk5_section_log, replace
+
+// Demonstration STATA code for week 5
+// Principles of Econometrics 4th Edition
+// Covered Problems: 5.19
+
+set more off
+clear all
+use cps4_small.dta, clear
+
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+/////////////////////////////// Question 5.19 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+********************************************************************************
+*Setup: Estimate the wage equation. 
+* For parts (A)-(C) use:
+*    ln(WAGE) = beta1 + beta2*EDUC + beta3*EXPER + beta4*HRSWK + e
+* and for parts (D)-(I) use:
+*    ln(WAGE) = beta1 + beta2*EDUC + beta3*EXPER + beta4*HRSWK 
+*                 + beta5*(EDUC x EXPER) + beta6*(EDUC^2) + beta7*(EXPER^2) + e
+*
+* Parts (A) - (I)
+********************************************************************************
+
+********************************************************************************
+*5.19 Part A: Report the results. Interpret the estimate for beta2, beta3, and 
+* beta4. Are these estimates significantly different from zero?
+********************************************************************************
+
+gen ln_wage = log(wage)
+reg ln_wage educ exper hrswk
+
+/* Discussion:
+Since we have a log-linear model, each of the betas 2 through 4 should be
+interpreted as indicating that a 1 unit increase in the X# variable leads to a
+beta#*100 percent change in Wage. Given our estimates, we could say:
+
+beta2: 1 additional year of education is expected to raise hourly wages by 9.03%
+beta3: 1 additional year or experience is expected to raise hourly wages by 0.58%
+beta4: Working 1 additional hour per week is expected to raise hourly wages by 0.89%
+*/
+
+********************************************************************************
+*5.19 Part B: Test the hypothesis that an extra year of education increases the
+* wage rate by at least 10% against the alternative that it is less than 10%.
+********************************************************************************
+
+scalar alpha = 0.1
+scalar crit_val_1side_lhs = (-1)*invttail(e(df_r), alpha)
+
+scalar tstat = (_b[educ]-0.1)/_se[educ]
+
+if tstat < crit_val_1side_lhs {
+	local testConclusion = "Reject Null"
+}
+else {
+	local testConclusion = "Fail to Reject Null"
+}
+
+disp "Test beta2 (_b[educ]) >= 0.1 (10% effect) versus alternative that beta2<0.1"
+disp "Confidence Level: " 100*(1-alpha) "%"
+disp "T-stat: " tstat " v.s. critival value: " crit_val_1side_lhs " --> `testConclusion'"
+
+********************************************************************************
+*5.19 Part C: Find a 90% interval estimate for the percentage increase in wage
+* from working an additional hour per week.
+********************************************************************************
+
+lincom hrswk, level(`=100*(1-alpha)')
+
+scalar crit_val_2side = invttail(e(df_r), alpha/2)
+scalar ci_hrswk_low = _b[hrswk]-crit_val_2side*_se[hrswk]
+scalar ci_hrswk_high = _b[hrswk]+crit_val_2side*_se[hrswk]
+
+disp 100*(1-alpha) "% Confidence interval for beta4 (HRSWK): [" ci_hrswk_low ", " ci_hrswk_high "]"
+
+********************************************************************************
+*5.19 Part D: Re-estimate the model with the additional variables EDUC x EXPER,
+* EDUC^2 and EXPER^2. Report the results. Are the estimated coefficients
+* significantly different from zero?
+********************************************************************************
+
+// Regression Input version (1)
+// Generate interactions as workspace variables and then use reg
+gen educ_exper = educ*exper
+gen educ_sqr = educ^2
+gen exper_sqr = exper^2
+reg ln_wage educ exper hrswk educ_exper educ_sqr exper_sqr
+
+// Store the results from this regression (will use for "hand" calculations later)
+matrix betaEst = e(b)
+matrix vcvEst = e(V)
+
+// Regression Input version (2)
+// Use the "interaction" notation, where # indicates multiplication
+reg ln_wage educ exper hrswk c.educ#c.exper c.educ#c.educ c.exper#c.exper
+
+********************************************************************************
+*5.19 Part E: For the new model, find expressions for the marginal effects
+* d ln(WAGE)/d EDUC and d ln(WAGE)/d EXPER
+********************************************************************************
+
+/* Discussion:
+Recall that we are using the following regression model:
+    
+	ln(WAGE) = beta1 + beta2*EDUC + beta3*EXPER + beta4*HRSWK +
+                 beta5*(EXPER*EDUC) + beta6*(EDUC^2) + beta7*(EXPER^2) + e
+
+Taking the derivative with respect to EDUC, we have:
+    
+	d ln(WAGE)/d EDUC = beta2 + beta5*EXPER + 2*beta6*EDUC
+
+and taking the derivative with respect to EXPER, we have:
+    
+	d ln(WAGE)/d EXPER = beta3 + beta5*EDUC + 2*beta7*EXPER
+	
+*/
+
+********************************************************************************
+*5.19 Part F: Estimate the marginal effect d ln(WAGE)/d EDUC for two workers
+* Jill and Wendy; Jill has 16 years of education and 10 years of experience,
+* while Wendy has 12 years of education and 10 years of experience. What can you
+* say about the marginal effect of education as education increases?
+********************************************************************************
+
+/* Discussion
+
+Since beta6 (the beta for educ^2) is positive, if experience is constant then
+each additional year of eduction leads to a larger increase in wages than earlier
+years of education. 
+
+*/
+
+/* STATA Technical Note: margins command
+
+Recall that in order to get the correct output using the margins command, we had 
+to use the interaction syntax in the reg command earlier. The "interaction" 
+syntax refers to inputting EDUC*EXPER as c.educ#c.exper rather than generating
+a variable separate from the regression command.
+*/
+
+/* STATA Technical Note: Names for accessing stored beta and standard error values
+
+In STATA, the beta estimate for a single variable can be accessed by using
+_b[NAME]. When the beta corresponds to a workspace variable, the NAME to put in
+is for the workspace variable. In addition, when we used the interaction notation
+in the reg command, we can access the beta associated with that term by using
+the same notation.
+
+For example, the beta estimate for c.educ#c.educ can be accessed by using
+_b[c.educ#c.educ]
+
+The same logic applies to finding standard error values.
+*/
+
+// Calculate marginal effect of eduction for Jill:
+
+// Calculation Option (1): margins
+
+margins, dydx(educ) at(educ = 16 exper = 10)
+
+// Calculation Option (2): lincom
+
+lincom _b[educ] + 10*_b[c.educ#c.exper] + 2*16*_b[c.educ#c.educ]
+
+// Calculation Option (3): Calculate point estimate and standard error 
+// by hand using output beta and vcv matricies
+
+scalar margeff_jill = betaEst[1,2-1] + 10*betaEst[1,5-1] + 2*16*betaEst[1,6-1]
+
+scalar margeff_se_jill = sqrt(vcvEst[2-1,2-1] + 10^2*vcvEst[5-1,5-1] + (2*16)^2*vcvEst[6-1,6-1] + ///
+								2*(1)*10*vcvEst[2-1,5-1] + 2*(1)*(2*16)*vcvEst[2-1,6-1] + 2*10*(2*16)*vcvEst[5-1,6-1])
+
+// Report results of "hand" estimate
+disp "Marginal Effect (Std Error) of Educ for Jill: " margeff_jill " (" margeff_se_jill ")"
+								
+// Calculate effects for Wendy:
+
+// Calculation Option (1): margins
+
+margins, dydx(educ) at(educ = 12 exper = 10)
+
+// Calculation Option (2): lincom
+
+lincom _b[educ] + 10*_b[c.educ#c.exper] + 2*12*_b[c.educ#c.educ]
+
+// Calculation Option (3): Calculate point estimate and standard error 
+// by hand using output beta and vcv matricies
+
+matrix margeff_wendy_mat = betaEst[1,"educ"] + 10*betaEst[1,"educ_exper"] + 2*12*betaEst[1,"educ_sqr"]
+
+
+matrix margeff_var_wendy_mat = vcvEst["educ","educ"] + 10^2*vcvEst["educ_exper","educ_exper"] + (2*12)^2*vcvEst["educ_sqr","educ_sqr"] + ///
+								2*(1)*10*vcvEst["educ","educ_exper"] + 2*(1)*(2*12)*vcvEst["educ","educ_sqr"] + 2*10*(2*12)*vcvEst["educ_exper","educ_sqr"]
+
+// Convert 1-by-1 matricies to scalars (see technical note below)								
+scalar margeff_wendy = margeff_wendy_mat[1,1]
+scalar margeff_se_wendy = sqrt(margeff_var_wendy_mat[1,1])
+
+disp "Marginal Effect (Std Error) of Educ for Wendy: " margeff_wendy " (" margeff_se_wendy ")"
+
+/* STATA Technical Note: matrix subscripting - numbers versus variable names
+
+The matricies e(b) for betas (a 1-by-k row matrix) and e(V) for the variance-
+covariance matrix (a k-by-k symmetric square matrix) are automatically given
+row and column names that match the order of variables entered into the reg command.
+We can then use STATA's string index for matricies to find the values that go with
+each of the variables. Note that since I stored betaEst and vcvEst after running
+
+   reg ln_wage educ exper hrswk educ_exper educ_sqr exper_sqr
+
+the matricies have column and row names that match the names from this command.
+
+Using the variable names as an index (e.g. "educ" and "educ_exper"), as we did 
+above for generating the Wendy values, means that STATA will return a matrix 
+(in this case a 1-by-1 matrix), while using numbers as indexes (as we did in the 
+Jill section) means that STATA automatically converts the 1-by-1 submatrix into 
+a scalar. In the section where we did the calculations for Wendy, we converted 
+the 1-by-1 matricies to scalars by using the number index [1,1]
+
+Despite the potential nuisance caused by adding an extra step converting from a
+1-by-1 matrix to a scalar, the advantage of using the name index is that we do 
+not have to remember what order the variables were put into the regression in 
+order to extract the correct values. As you can see, in the numeric index we
+used #-1 to find the beta# value, since STATA automatically puts the constant
+as the last variable versus our notation where the constant is beta1.
+
+*/
+
+********************************************************************************
+*5.19 Part G: Test, as an alternative hypothesis, that Jill's marginal effect of
+* eduction is greater than that of Wendy. Use a 5% significance level.
+********************************************************************************
+
+
+/* Discussion:
+
+ ME(Jill) - ME(Wendy) = beta3-beta3 + beta5*(EXPER_Jill - EXPER_Wendy) + 2*beta6*(EDUC_Jill - EDUC_Wendy)
+
+Right away, we see that the beta3 terms will cancel out. In addition, since 
+EXPER_Jill = EXPER_Wendy, this leaves us with:
+
+ ME(Jill) - ME(Wendy) = 2*beta6*(EDUC_Jill - EDUC_Wendy)
+
+Since our alternative is that Jill's marginal effect is greater than Wendy's, we
+are doing a right-hand side test with a null of ME(Jill) - ME(Wendy) <= 0 and
+an alternative that ME(Jill) - ME(Wendy) > 0. 
+
+Since this boils down to evaluating a beta estimate times a constant, and our 
+null is 0, this question becomes the same as evaluating whether beta6 
+(beta for educ^2) is significantly different from 0. Notice that the t-stat we 
+calculate below is the same as the t-stat for c.educ#c.educ in the regression
+output.
+
+*/
+
+// Calculation option (1): lincom
+// --> Reminder: since the null we're interested in is 0, the t-stat reported by
+// STATA is the one that we want to use. However, the p-value is still not the one 
+// we want to use because STATA assumes a 2-sided alternative while we are 
+// considering a 1-sided alternative. Since the point estimate is of the correct
+// sign for a rejection (positive since we have a RHS test), the p-value for our
+// test is 1/2 the p-value reported by lincom.
+
+lincom 2*(16-12)*_b[c.educ#c.educ]
+
+// Calculation option (2): calculate by hand
+scalar diff_margeff = margeff_jill - margeff_wendy
+scalar diff_margeff_se = 2*(16-12)*_se[c.educ#c.educ]
+scalar diff_margeff_tstat = diff_margeff/diff_margeff_se
+
+disp "Difference in Jill vs. Wendy Marginal Effects (se) [t]: " diff_margeff " (" diff_margeff_se ") [" diff_margeff_tstat "]"
+
+// Generate the appropriate test statistic for the 5% confidence level RHS test
+scalar alpha = 0.05
+scalar critical_value = invttail(e(df_r), alpha)
+scalar pval = 1-t(e(df_r),diff_margeff_tstat)
+
+// Determine test conclusion:
+if diff_margeff_tstat > critical_value {
+	local testConclusion = "Reject Null"
+}
+else {
+	local testConclusion = "Fail to Reject Null"
+}
+
+disp "Test Jill marginal effect of education is less than or equal to Wendy (Alternative: Jill > Wendy)"
+disp "T-stat: " diff_margeff_tstat " v.s. " 100*(1-alpha) "% critical value: " critical_value " (p-value = " pval ") --> `testConclusion'"
+
+********************************************************************************
+*5.19 Part H: Estimate the marginal effect d ln(WAGE)/d EXPER for two workers 
+* Chris and Dave; Chris has 16 years of education and 20 years of experience, 
+* while Dave has 16 years of education and 30 years of experience. What can you
+* say about the marginal effect of experience as experience increases?
+********************************************************************************
+
+/* Discussion:
+
+Recall that earlier we found that:
+
+	d ln(WAGE)/d EXPER = beta3 + beta5*EDUC + 2*beta7*EXPER
+
+In the case of experience, we found a negative point estimate for beta7. This
+means that, holding education fixed, higher experience has a falling marginal 
+effect on wages. Given the positive beta3 (and the relatively small beta5), 
+higher experience initially leads to higher wages, but the beneficial effect of
+experience declines and eventually turns negative. We will see an exercise
+on when it turns negative in part (I).
+
+Given the results that we calculate below for Dave, given 16 years of education 
+there is still not an expected marginal decline in wages after reaching 30 years 
+of experience.
+*/
+
+// Estimated marginal effect of EXPER for Chris
+
+// Calculation option (1): margins
+
+margins, dydx(exper) at(educ = 16 exper = 20)
+
+// Calculation option (2): lincom
+
+lincom _b[exper] + 16*_b[c.educ#c.exper] + 2*20*_b[c.exper#c.exper]
+
+// Calculation Option (3): Calculate point estimate and standard error 
+// by hand using output beta and vcv matricies
+
+scalar margeff_chris = betaEst[1,3-1] + 16*betaEst[1,5-1] + 2*20*betaEst[1,7-1]
+
+scalar margeff_se_chris = sqrt(vcvEst[3-1,3-1] + 16^2*vcvEst[5-1,5-1] + (2*20)^2*vcvEst[7-1,7-1] + ///
+								2*(1)*16*vcvEst[3-1,5-1] + 2*(1)*(2*20)*vcvEst[3-1,7-1] + 2*16*(2*20)*vcvEst[5-1,7-1])
+
+// Report results of "hand" estimate
+disp "Marginal Effect (Std Error) of Exper for Chris: " margeff_chris " (" margeff_se_chris ")"
+
+
+// Estimated marginal effect of EXPER for Dave
+
+// Calculation option (1): margins
+
+margins, dydx(exper) at(educ = 16 exper = 30)
+
+// Calculation option (2): lincom
+
+lincom _b[exper] + 16*_b[c.educ#c.exper] + 2*30*_b[c.exper#c.exper]
+
+// Calculation option (3): Calculate point estimate and standard error by hand
+// using output beta and vcv matricies
+
+matrix margeff_dave_mat = betaEst[1,"exper"] + 16*betaEst[1,"educ_exper"] + 2*30*betaEst[1,"exper_sqr"]
+
+
+matrix margeff_var_dave_mat = vcvEst["exper","exper"] + 16^2*vcvEst["educ_exper","educ_exper"] + (2*30)^2*vcvEst["exper_sqr","exper_sqr"] + ///
+								2*(1)*16*vcvEst["exper","educ_exper"] + 2*(1)*(2*30)*vcvEst["exper","exper_sqr"] + 2*16*(2*30)*vcvEst["educ_exper","exper_sqr"]
+
+// Convert 1-by-1 matricies to scalars (see technical note at end of Part F)								
+scalar margeff_dave = margeff_dave_mat[1,1]
+scalar margeff_se_dave = sqrt(margeff_var_dave_mat[1,1])
+
+// Report results of "hand" estimate
+disp "Marginal Effect (Std Error) of Exper for Dave: " margeff_dave " (" margeff_se_dave ")"
+
+********************************************************************************
+*5.19 Part I: For someone with 16 years of education, find a 95% interval
+* interval estimate for the number of years of experience after which the 
+* marginal effect of experience becomes negative.
+********************************************************************************
+
+/* Discussion
+
+As mentioned earlier, given the negative beta7 there will be some level of
+experience where wages start to decline. We can find the tipping point by
+setting the marginal effect equal to zero:
+
+beta3 + beta5*EDUC + 2*beta7*EXPER_TIP = 0
+--> EXPER_TIP = (beta3 + beta5*EDUC)/(-2*beta7)
+
+Next, to calculate the confidence interval for this, we will need to use the
+delta method. This will mean compiling the following partial deriviatives:
+d EXPER_TIP/d beta3 = prtl_b3 = 1/(-2*beta7)
+d EXPER_TIP/d beta5 = prtl_b5 = EDUC/(-2*beta7)
+d EXPER_TIP/d beta7 = prtl_b7 = (-1)*(beta3 + beta5*EDUC)/(-2*beta7^2) 
+					= (-1)*EXPER_TIP/beta7
+
+Next, we can plug these partial derivatives into the equation:
+
+Var(EXPER_TIP) = (prtl_b3^2)*var(b3) + (prtl_b5^2)*var(b5) + (prtl_b7^2)*var(b7)
+                   + 2*prtl_b3*prtl_b5*cov(b3,b5) + 2*prtl_b3*prtl_b7*cov(b3,b7)
+				   + 2*prtl_b5*prtl_b7*cov(b5,b7)
+
+And then s.e.(EXPER_TIP) = sqrt[ Var(EXPER_TIP) ]
+
+Finally, since we are using the delta method, we choose our critical value by
+going to the normal distribution.
+				   
+*/
+
+// Calculation option (1): nlcom
+nlcom (_b[exper]+16*_b[c.educ#c.exper])/(-2*_b[c.exper#c.exper])
+
+// Calculation option (2): calculate by hand
+scalar exper_tip = (_b[exper]+16*_b[c.educ#c.exper])/(-2*_b[c.exper#c.exper])
+scalar prtl_b3 = 1/(-2*_b[c.exper#c.exper])
+scalar prtl_b5 = 16/(-2*_b[c.exper#c.exper])
+scalar prtl_b7 = (-1)*exper_tip/_b[c.exper#c.exper]
+scalar exper_tip_se = sqrt(prtl_b3^2*vcvEst[3-1,3-1] + prtl_b5^2*vcvEst[5-1,5-1] + prtl_b7^2*vcvEst[7-1,7-1] + ///
+                                2*prtl_b3*prtl_b5*vcvEst[3-1,5-1] + 2*prtl_b3*prtl_b7*vcvEst[3-1,7-1] + 2*prtl_b5*prtl_b7*vcvEst[5-1,7-1])
+
+scalar alpha = 0.05
+scalar critical_value = invnormal(1-(alpha/2))
+scalar exper_tip_cilow = exper_tip - critical_value*exper_tip_se
+scalar exper_tip_cihigh = exper_tip + critical_value*exper_tip_se
+
+disp "Experience Tipping Point - Point Estimate (Std Error): " exper_tip " (" exper_tip_se ")"
+disp "Experience Tipping Point - Confidence Interval: [" exper_tip_cilow ", " exper_tip_cihigh "]"
+
+
+//Convert log file (smcl) to pdf
+translate wk5_section_log.smcl "Week 5 TA Section STATA.pdf"
+
+log close _all

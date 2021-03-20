@@ -1,0 +1,111 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage{import}
+\usepackage{lipsum}
+\usepackage[backend=bibtex,style=chicago-authordate]{biblatex}
+\import{C:/Users/ryanj/Dropbox/code/LatexMacros/}{mymacros2.tex}
+\addbibresource{C:/Users/ryanj/Dropbox/code/LatexMacros/Finalpaperbib}
+%remember, this should be in preamble. See shared late file.
+\AtBeginSection[]{
+	\begin{frame}{Table of Contents}
+	\tableofcontents[currentsection]
+	\end{frame}
+}
+
+
+%\usecolortheme{seahorse}
+%\usefonttheme{professionalfonts}
+
+\usetheme{Berkeley}
+\usecolortheme{beetle}
+
+%Remove beamer nav tools, add page numer and adj its color
+\setbeamertemplate{navigation symbols}{}
+\addtobeamertemplate{navigation symbols}{}{%
+	\usebeamerfont{footline}%
+	\usebeamercolor[fg]{footline}%
+	\hspace{1em}%
+	\insertframenumber/\inserttotalframenumber
+}
+\setbeamercolor{footline}{fg=gray}
+
+\title{ Week 1 Discussion Section Questions }
+\author{Ryan Martin}
+
+
+\begin{document}
+
+	\maketitle
+
+
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+
+	\section{Question 1}
+	
+\begin{frame}{2.6}
+
+A soda vendor at Louisiana State University football games observes that more sodas are sold the warmer the temperature at game time is. Based on 32 home games covering five years, the vendor estimates the relationship between soda sales and temperature to be $$\hat{y} = - 240 + 8x$$ where $y$ is the number of sodas she sells and x is the temperature in degrees Fahrenheit
+
+	\begin{itemize}[<+->]
+
+		\item[a] Interpret the estimated slope and intercept. Do the estimates make sense? Why or why not?
+
+		\item[b] On a day when the temperature at game time is forecast to be $80^\circ$ F, predict how many sodas the vender will sell.
+
+		\item[c] Below what temperature are the predicted sales zero?
+
+		\item[d] Sketch a graph of the estimated regression line
+	\end{itemize}
+
+\end{frame}
+
+
+
+\section{Question 2}
+
+\AtBeginSection
+
+\begin{frame}{2.15}
+
+
+How much does education affect wage rates? The data file $\texttt{cps4\_small.dat}$ contains 1000 observations on hourly wage rates, education and other variables from the 2008 Current Population Survey (CPS).
+\begin{itemize}[<+->]
+\item[a] Obtain the summary statistics and histograms for the variables $WAGE$ and 
+$EDUC$. Discuss the data characteristics.
+
+\item[b] Estimate the linear regression $WAGE = \beta_1 + \beta_2EDUC + e$ and discuss the results
+
+\item[c] Calculate the least squares residuals and plot them against $EDUC$. Are any patterns evident? IF assumptions SR1-SR5 hold, should any patterns be evident in the least squares residuals?
+
+\item[d]
+Estimate separate regressions for males, females, blacks and whites. Compare the results.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}[<+->]
+\item[e]
+Estimate the quadratic regression $WAGE = \alpha_1 + \alpha_2 EDUC^2 + e$ and discuss the results. Estimate the marginal effect of another year of education on wage for a person with 12 years of education and for a person with 14 years of education. Compare these values to the estimated marginal effect of education from the linear regression in part (b). 
+
+\item[f] Plot the fitted linear model from part (b) and the fitted values from the quadratic model from part (e) in the same graph with the data on $WAGE$ and $EDUC$. Which model appears to fit the data better? *Note, there are actually many, many formal ways of testing which model fits better. The problem is called model selection*
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}[<+->]
+
+	\item[g]
+	Construct a histogram of $ln(WAGE)$ (Note, log is usually natural log now too, even though in grade school it was the abbreviation for the base-10 log). Compare the shape of this histogram to that for $WAGE$ from part (a). Which appears more symmetric and bell-shaped?
+	
+	\item[h]
+	Estimate the log-linear regression $\log(WAGE) = \gamma_1 + \gamma_2 EDUC + e$. Estimate the marginal effect of another year of education on wage for a person with 12 years of education and for a person with 14 years of education. Compare these values to the estimated marginal effects of education from the linear regression in part (b) and the quadratic equation in part (e).
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+\end{document}
+
+

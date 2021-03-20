@@ -1,0 +1,368 @@
+---
+title: "Chapter 8 Code"
+author: "Ryan Martin"
+date: "February 28, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+I found an R version of Principles of Econometrics here
+
+https://bookdown.org/ccolonescu/RPoE4/
+
+It's great! Does all the examples in the text with R. May be very helpful if you want to do econometrics with R.
+
+
+# Chapter 8 - Heteroskedasticity
+
+We learned before that heteroskedasticity is when the variance of the error terms changes with the covariates (x's). Heteroskedasticity violates (one of) the assumptions in SR1-SR5 and MR1-MR5. Note, in general, heteroskedasticity isn't the only way the variances could change. Correlation between the x's and residuals is not necessary or sufficient for heteroskedasticity. The residuals could vary by mean or have the same mean and variance, but still have a changing distribution! However, if they are normal, then the same mean and variance means not changing. Usually, changes in mean we hope to catch with "fixed effects" (as in chapter 7)
+
+Heteroskedasticity is common in cross-sectional data. Cross-sectional data is common in economics (its expensive and takes patience to collect time series/panel data). Hence, heteroskedasticity is a well-known concern in economics.
+
+### Least Squares consequences
+
+1. Under heteroskedasticity, (with the errors still uncorrelated with the covariates!) the OLS term is unbiased but no longer the variance minimizing estimate (remember, the variance minimizing estimate is called "best"). 
+2. Standard errors will be incorrectly estimated, so CI and hypothesis tests will be misleading.
+
+If $y_i = \beta_1 + \beta_2 x_i + e_i$ and $var(e_i) = \sigma^2$ (homoskedastic), $$var(b_2) = \frac{\sigma^2}{\sum (x_i - \bar{x}^2)}$$ However, if $var(e_i) = \sigma_i^2$ (heteroskedastic), $$var(b_2) = \frac{\sum (x_i - \bar{x})^2 sigma_i^2}{[\sum (x_i - \bar{x}^2)]^2}$$
+
+## Detecting Heteroskedasticity
+
+1. Residual plots (like chapter 2)
+
+2. Lagrange Multiplier Tests (a.ka. Breusch-Pagan test)
+
+3. White test
+
+4. Goldfeld-Quandt Test
+
+### Residual Plots
+- like in chapter 2
+
+### Lagrange Multiplier Tests
+
+
+Estimate the (extra) regression $$\hat{e_i}^2 = \alpha_1 + \sum_{j = 2}^S \alpha_j z_{ij} + v_{i}$$
+
+Where $z_{ij}$ are transforms of the x covariates. Turns out $$\chi^2_{S-1} = N \times R^2$$, where the $R^2$ is from the extra (not the original) regression. More details in  Appendix 8B. 
+
+Turns out, the statistic from the linear one is valid for testing an alternative hypohtesis of heteroskedasticity where the variance is any function $h(\alpha_1 + \sum_{j = 2}^S \alpha_j z_{ij})$
+
+### White Test
+
+Specific version of Lagrange Multiplier tests. The z's are the x's, x's squared and interaction terms.
+
+
+### The Goldfeld-Quandt Test
+
+For when can partition (separate everyone) into two classes.
+
+If have two groups with different errors, $\sigma_1^2$ and $\sigma_2^2$, then under the null $\sigma_1^2 = \sigma_2^2$, $\frac{\hat\sigma_1^2 }{\sigma_2^2} \sim F_{N_1 - K_1, N_2 - K_2}$
+
+So, we can estimate the variance for the two groups and then do an F-test.
+
+Can create groups from the $x$'s if ther are no natural groups.
+
+## 8.3 Estimating with Heteroskedasticity
+
+Use White's heteroskedasticity-consistent standard errors a.k.a. heteroskedasticity robust standard errors a.k.a. robust standard errors.
+
+For $y = \beta_1 + \beta_2 x + e$, then $$\widehat{var}(b_2) = \frac{N}{N-2} \frac{ \sum_{i = 1}^{N} (x_i - \bar{x})^2 \hat{e_i}^2 }{ [\sum (x_i - \bar{x})^2 ]^2}$$
+
+Note that this heteroskedasticity-consistent standard error *does not* find variance as a function of the covariates. Instead, it just comes up with a different variance estimate. A different way of averaging the variance.
+
+There is matrix version too, for larger linear regressions.
+
+## GLS (Generalized Least Squares)
+- Great if you actually know the variances, but when you don't it may be worse!
+
+Cannot estimate n variances with n data points. Need to impose some structure. For example, can suppose $$var(e_i) = \sigma_i^2 = \sigma^2 x_i$$
+
+(What does this mean for our hypothesis tests?)
+
+Remember that $x_i$ are assumed fixed. Then consider rescaling by $\sqrt{x_i}$. Get (in bivariate regression case) $$ \frac{y_i}{\sqrt{x_i}} = \beta_1 \frac{1}{\sqrt{x_i}} + \beta_2 \frac{x_i}{\sqrt{x_i}} + \frac{e_i}{\sqrt{x_i}}$$
+
+If define $y_i^\star = \frac{y_i}{\sqrt{x_i}}$, $x_{i1}^\star = \frac{1}{\sqrt{x_i}}$, $x_{i2}^\star = \frac{x_i}{\sqrt{x_i}}$ and $e_i^\star = \frac{e_i}{\sqrt{x_i}}$ then now our (interceptless!) regression can be run with homoskedasticity.
+
+
+## Heteroskedasticity in the Linear Probability Model - Covered in Problem 8.22 below
+# 8.22
+
+
+In Exercise 7.7 we considered a model designed to provide information to mortgage lenders. They want to determine borrower and loan factors that may lead to delinquency or foreclosure. In the file \texttt{lasvegas.dat}, there are 1000 observations on mortgages for single-family homes in Las Vegas, Nevada during 2008. The variable of interest is DELINQUENT, an indicator variable = 1 if the borrower missed at least three payments (90+ days late), but 0 otherwise. Explanatory variables are LVR = the ratio of the loan amount to the value of the property; REF = 1 if purpose of the loan was a ``refinance'' and 0 if the loan was for a purchase; INSUR = 1 if mortgage carries mortgage insurance, 0 otherwise; RATE = initial interest rate of the mortgage; AMOUNT = dollar value of mortgage (in \$100,000); CREDIT = credit score, TERM = number of years between disbursement of the loan and the date it is expected to be fully repaid, ARM = 1 if mortgage has an adjustable rate, and 0 if the mortgage has a fixed rate.
+	
+### a
+
+Estimate the linear probability (regression) model explaining DELINQUENT as a function of the remaining variables. Use the White test with cross-product terms included to test for heteroskedasticity. Why did we include the cross-product terms?
+
+*Solution*
+White's test is included below. Note that this is White's test for heteroskedasticity, not his heteroskedasticity corrected variance estimator. White has two things named after him in this chapter; he was a prolific academic with many interests. 
+
+The white test rejects the null at the .05 level. p-value is very small. Looks like heteroskedasticity is present.
+
+Why include the cross-product terms? Well, in general because you want to leave room for the variance to depend on the combined presence of two variables. Note that, unfortunately, all of the packages I have found for R to do White's test do not generically include cross product terms or squared terms. So, we had to do it by hand. I showed the packaged regressions too (which are just errors squared on all the independent variables in the regression )
+
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "lasvegas.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+attach(dat)
+#View(dat)
+
+unique(delinquent) #only 0, 1. LHS is a dummy/bernoulli r.v.
+reg_out <- lm(data = dat, delinquent ~.)
+  # ~. means regress on everything in data!
+s <- summary(reg_out)
+s
+res.squared <- s$residuals^2
+dat2 <- cbind(res.squared, dat[, -ncol(dat)]) #remove delinquent
+  #and add res.squared
+white.reg <- lm(data = dat2, res.squared ~ .*. + I(lvr^2) + I(ref^2) +
+     I(insur^2) + I(rate^2) + I(amount^2) + I(credit^2) +
+     I(term^2) + I(arm^2))
+s2 <- summary(white.reg)
+s2
+Chi.stat = nrow(dat2)* s2$r.squared
+qchisq(.05, s2$df[1])
+#reject the null, heteroskedasticity present
+
+
+#to run white test can also use packages
+#but these packages don't include squared or interaction terms
+#Easier to just use package
+
+library(lmtest)
+# just regresses errors squared on independent vars
+# not squared or interaction terms
+bpreg <- bptest(reg_out)
+bpreg
+
+
+#alternative
+# just regresses errors squared on independent vars
+# not squared or interaction terms
+library(olsrr)
+ols_bp_test(reg_out)
+
+```
+
+### b
+
+Use the estimates from (a) to estimate the error variances for each observation. How many of these estimates are at least one? How many are at most 0? How many are less than .01?
+
+*Solution* Note that we get one variance estimate per row in our data. That is, each of these are just the predicted variances per line of data. Note that since we have the LHS/y variable is a dummy (or Bernoulli) random variable, the variance of $y_i$ should be $P(Y_i = 1) \times (1 - P(Y_i = 1))$ Thus, our variance estimate is just $\hat{y}_i\times (1 - \hat{y_i})$. This is because our regression model is a linear probability model; $\hat{y}_i$ is the estimated probability our random variable is 1. 
+
+You may recall that the linear probability model has the problem that some probabilities will be below 0 or bigger than 1. These points variance estimates will be negative (look at formula for variance, $\hat{y}_i\times (1 - \hat{y_i})$ to see why). We are counting how many of these problem points there are in this part of the problem
+
+```{r}
+predicted_var <-  predict(reg_out)*(1 - predict(reg_out))
+sum(predicted_var >1)
+sum(predicted_var < 0)
+sum(predicted_var<.01) - sum(predicted_var < 0)
+length(predicted_var) - sum(predicted_var<.01) #regular
+summary(predicted_var)
+hist(predicted_var, main = "Predicted Error Variance Distribution")
+```
+
+
+
+### c
+
+Prepare a table containing estimates and standard errors from estimating the linear probability model in each of the following ways:
+
+\begin{itemize}
+\item[i.] Least squares with conventional standard errors.
+\item[ii.] Least squares with heteroskedasticity-robust standard errors
+\item[iii.] Generalized least squares omitting observations with variance less than .01.
+\item[iv.] Generalized least squares with variance less than .01 changed to .01
+\item [v] Generalized least squares with variance less than .00001 changed to .00001.
+\end{itemize} 
+
+Discuss and compare the different results.
+
+*Solution:*
+Let me write the regression equation as $$DELINQUENT_i = \beta_1 + \beta_2 x_{2i} + \dots + \beta_K x_{Ki} + e_i$$
+Since this is a linear probability model, the GLS solution is the regression $$\frac{DELINQUENT_i}{\sqrt{\hat{DELINQUENT_i}(1 - \hat{DELINQUENT_i})}} =  \frac{\beta_1}{\sqrt{\hat{DELINQUENT_i}(1 - \hat{DELINQUENT_i})}} + $$  $$\frac{\beta_2 x_{2i}}{\sqrt{\hat{DELINQUENT_i}(1 - \hat{DELINQUENT_i})}} +$$ $$\dots +  \frac{\beta_K x_{Ki}}{\sqrt{\hat{DELINQUENT_i}(1 - \hat{DELINQUENT_i})}} + \tilde{e}_i$$ Note that the hats are the OLS weights, not any other weights. We can do this with a weighted regression in R. Note that the weights should be $\frac{1}{\hat{y_i}(1 - \hat{y}_i)}$ and not $\frac{1}{\sqrt{\hat{y_i}(1 - \hat{y}_i)}}$. R applies the square root on its own.
+
+```{r}
+summary(reg_out, robust = T)
+
+#putting in a table
+library(stargazer)
+#install.packages("stargazer")
+library(sandwich)
+cov <- vcovHC(reg_out, type = "HC") #White errors
+robust.se <- sqrt(diag(cov))
+library(nlme)
+
+my_gls_weight = 1/predicted_var
+
+#For case 3
+case3 = predicted_var>.01
+datcase3 = dat[case3,]
+my_gls_weight3 = my_gls_weight[case3] 
+
+
+#For case 4
+my_gls_weight4 <- my_gls_weight
+my_gls_weight4[predicted_var<.01] <- 1/.01
+#my_gls_weight4 = sqrt(my_gls_weight4) #getting sd
+
+#For case 5
+my_gls_weight5 <- my_gls_weight
+my_gls_weight5[predicted_var<.00001] <- 1/.00001
+#my_gls_weight5 = sqrt(my_gls_weight5) #getting sd
+
+reg3 <- lm(data = datcase3, 
+           delinquent ~. , weights = my_gls_weight3)
+
+reg4 <- lm(data = dat, delinquent ~. , weights = my_gls_weight4)
+
+reg5 <- lm(data = dat, delinquent ~. , weights = my_gls_weight5)
+
+reg_gls1 <-  gls(data = datcase3, delinquent ~ ., method = "ML")
+summary(reg_gls1)
+
+
+summary(reg3)
+summary(reg4)
+summary(reg5)
+
+
+dattest = dat*sqrt(my_gls_weight5)
+dattest2 = cbind(dattest, new_const = sqrt(my_gls_weight5))
+regtest5 <- lm(data = dattest2, delinquent ~. + 0)
+summary(regtest5) #same as above
+
+
+dattest3 = dat*sqrt(my_gls_weight4)
+dattest4 = cbind(dattest3, new_const = sqrt(my_gls_weight4))
+regtest4 <- lm(data = dattest4, delinquent ~. + 0)
+summary(regtest4) #same as above
+
+
+#this creates latex for a table. very convenient
+#stargazer(reg_out, reg_out, reg3, reg4, reg5,
+#    title = "Regression Comparisons",
+#    se=list(NULL, robust.se, NULL,
+#  NULL, NULL),  column.labels = c("default","robust", "Censored", #"Round .01", "Round .00001"), column.sep.width = ".2pt",
+#  font.size = "small", omit.stat = c("f"), digits = 4) 
+  
+```
+
+\begin{table}[!htbp] \centering 
+  \caption{Regression Comparisons} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{.2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{5}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-6} 
+\\[-1.8ex] & \multicolumn{5}{c}{delinquent} \\ 
+ & default & robust & Censored & Round .01 & Round .00001 \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ lvr & 0.0016$^{**}$ & 0.0016$^{**}$ & 0.0016$^{*}$ & 0.0009$^{**}$ & 0.0005$^{**}$ \\ 
+  & (0.0008) & (0.0007) & (0.0008) & (0.0004) & (0.0002) \\ 
+  & & & & & \\ 
+ ref & $-$0.0593$^{**}$ & $-$0.0593$^{**}$ & $-$0.0571$^{***}$ & $-$0.0327$^{**}$ & $-$0.0267$^{**}$ \\ 
+  & (0.0238) & (0.0239) & (0.0211) & (0.0146) & (0.0105) \\ 
+  & & & & & \\ 
+ insur & $-$0.4816$^{***}$ & $-$0.4816$^{***}$ & $-$0.5016$^{***}$ & $-$0.4770$^{***}$ & $-$0.5127 \\ 
+  & (0.0236) & (0.0302) & (0.0292) & (0.0297) & (0.4086) \\ 
+  & & & & & \\ 
+ rate & 0.0344$^{***}$ & 0.0344$^{***}$ & 0.0413$^{***}$ & 0.0204$^{***}$ & 0.0002 \\ 
+  & (0.0086) & (0.0098) & (0.0082) & (0.0057) & (0.0048) \\ 
+  & & & & & \\ 
+ amount & 0.0238$^{*}$ & 0.0238$^{*}$ & 0.0258$^{**}$ & 0.0187$^{*}$ & $-$0.0045 \\ 
+  & (0.0127) & (0.0144) & (0.0121) & (0.0099) & (0.0089) \\ 
+  & & & & & \\ 
+ credit & $-$0.0004$^{**}$ & $-$0.0004$^{**}$ & $-$0.0004$^{**}$ & $-$0.0002 & $-$0.00002 \\ 
+  & (0.0002) & (0.0002) & (0.0002) & (0.0001) & (0.0001) \\ 
+  & & & & & \\ 
+ term & $-$0.0126$^{***}$ & $-$0.0126$^{***}$ & $-$0.0190$^{***}$ & $-$0.0065$^{***}$ & $-$0.0012 \\ 
+  & (0.0035) & (0.0035) & (0.0041) & (0.0021) & (0.0018) \\ 
+  & & & & & \\ 
+ arm & 0.1283$^{***}$ & 0.1283$^{***}$ & 0.2089$^{***}$ & 0.0419$^{***}$ & 0.0188$^{*}$ \\ 
+  & (0.0319) & (0.0276) & (0.0407) & (0.0140) & (0.0109) \\ 
+  & & & & & \\ 
+ Constant & 0.6885$^{***}$ & 0.6885$^{***}$ & 0.7157$^{***}$ & 0.5587$^{***}$ & 0.5616 \\ 
+  & (0.2112) & (0.2275) & (0.1952) & (0.1317) & (0.4188) \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 1,000 & 1,000 & 842 & 1,000 & 1,000 \\ 
+R$^{2}$ & 0.3363 & 0.3363 & 0.3049 & 0.2661 & 0.0166 \\ 
+Adjusted R$^{2}$ & 0.3309 & 0.3309 & 0.2982 & 0.2602 & 0.0087 \\ 
+Residual Std. Error & 0.3267 (df = 991) & 0.3267 (df = 991) & 0.9156 (df = 833) & 0.9646 (df = 991) & 14.0217 (df = 991) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
+### d
+
+Using the results from (iv.), interpret each of the coefficients. Mention whether the signs are reasonable and whether they are significantly different from 0.
+
+
+*Solution* For 4, only amount and credit are insignificant. It's a little surprising that credit history is not significant in predicting delinquent probabilities. It is negative and significant (at the .05 level) in all other regressions (as would be suspected). It is always weak, however. 1 unit increase in credit score decreases the average probability of default by no more than .0004 across all regressions. 
+
+The most practically significant term appears to be insurance. It is highly significant (at the .001 level) and has a large size. The interpretation is that a person with mortgage insurance will default with a probability 47.8% lower than a person without, all else constant.
+
+
+
+
+
+# Chapter 8 New Stata Code
+
+
+
+```{r, eval=F, echo=T}
+estat imtest, white //does white test for heteroskedasticity
+reg y x [aweight=1/var] //does weighted regression,
+      // same as rescaling all by 1/sqrt(var)
+reg y x, vce(robust) //use white's robust standard errors
+estata hettest income, iid #BP test
+```
+
+
+# Homework Problems: 8.4, 8.6, 8.8
+
+Skills:
+8.4 (data: `vacation.dta`)
+  - Interpret residual plots.
+  - Goldfeld-Quandt test
+  - Compare OLS, OLS + White, GLS with $\sigma_i = \sigma \times INCOME$
+
+8.6 Have table for regression $$EHAT\_SQ = \alpha_1 + \alpha_2 ROOMS + \alpha_3 ROOMS^2 + \alpha_4 CRIME + \alpha_5 CRIME^2 + \alpha_6 DIST + \nu$$ where $EHAT\_SQ$ is the square of regression residuals. (i.e. this is a WHITE Heteroskedasticity test style regression)
+  a. Read the table, note what seems to be influencing variance
+  b. Test for heteroskedasticity.
+  
+8.8 (data: `stockton96.dta`)
+
+
+\newpage
+
+# Question Snips
+
+
+![](question8point41.png)
+
+
+
+![](question8point42.png)
+
+![](question8point43.png)
+
+
+![](table8point4question8point6.png)
+
+
+![](question8point8.png)

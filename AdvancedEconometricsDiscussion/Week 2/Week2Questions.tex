@@ -1,0 +1,129 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage{import}
+\usepackage{lipsum}
+\usepackage[backend=bibtex,style=chicago-authordate]{biblatex}
+\import{C:/Users/ryanj/Dropbox/code/LatexMacros/}{mymacros2.tex}
+\addbibresource{C:/Users/ryanj/Dropbox/code/LatexMacros/Finalpaperbib}
+%remember, this should be in preamble. See shared late file.
+\AtBeginSection[]{
+	\begin{frame}{Table of Contents}
+	\tableofcontents[currentsection]
+	\end{frame}
+}
+
+
+%\usecolortheme{seahorse}
+%\usefonttheme{professionalfonts}
+
+\usetheme{Berkeley}
+
+
+%Remove beamer nav tools, add page numer and adj its color
+\setbeamertemplate{navigation symbols}{}
+\addtobeamertemplate{navigation symbols}{}{%
+	\usebeamerfont{footline}%
+	\usebeamercolor[fg]{footline}%
+	\hspace{1em}%
+	\insertframenumber/\inserttotalframenumber
+}
+\setbeamercolor{footline}{fg=gray}
+
+\title{ Week 2 Discussion Section Questions }
+\author{Ryan Martin}
+
+
+\begin{document}
+
+	\maketitle
+
+
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+
+	\section{Question 1}
+	
+\begin{frame}{3.8}
+	The file \texttt{br2.dat} contains data on 1080 houses sold in Baton Rouge, Louisiana during mid-2005. The data include sale price and the house size in square feet. Also included is an indicator variable $TRADITIONAL$ indicating whether the house style is traditional or not.
+
+	\begin{itemize}
+
+		\item[a] For the traditional-style houses estimate the linear regression model $PRICE = \beta_1 + \beta_2 SQFT + e$. Test the null hypothesis that the slope is zero against the alternative that it is positive, using the $\alpha = .01$ level of significance. Follow and show all the test steps described in Chapter 3.4.
+
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{3.8 Continued I}
+
+\begin{itemize}[<+->]
+	
+
+	\item[b] Using th linear model in (a), test the null hypothesis ($H_0$) that the expected price of a house of 2000 square feet is equal to, or less than, \$120,000. What is the appropriate alternative hypothesis? Use the $\alpha = .01$ level of significance. Obtain the p-value of the test and show its value on a sketch. What is your conclusion?
+	
+	\item[c] Based on the estimated results from part (a), construct a 95\% interval estimate of the expected price of a house of 2000 square feet.
+	
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{3.8 Continued II}
+
+\begin{itemize}[<+->]
+	
+	
+	
+	\item[d] For the traditional-style houses, estimate the quadratic regression model $PRICE = \alpha_1 + \alpha_2 SQFT^2 + e$. Test the null hypothesis that the marginal effect of an additional square foot of living area in a home with 2000 square feet of living space is \$75 against the alternative that the effect is less than \$75. Use the $\alpha = .01$ level of significance. Repeat the same test for a home of 4000 square feet of living space. Discuss your conclusions.
+	
+	\item[e] For the traditional-style houses, estimate the log-linear regression model $\log(PRICE) = \gamma_1 + \gamma_2 SQFT + e$. Test the null hypothesis that the marginal effect of an additional square foot of living area in a home with 2000 square feet of living space is \$75 against the alternative that the effect is less than \$75. Use the $\alpha = .01$ level of significance. Repeat the same test for a home of 40000 square feet of living space. Discuss your conclusions.
+\end{itemize}
+
+\end{frame}
+
+
+
+\section{Question 2}
+
+\AtBeginSection
+
+\begin{frame}{3.12}
+
+
+	Is the relationship between experience and wages constant over one's lifetime? To investigate we will fit a quadratic model using the data file \texttt{cps4\_small.dat}, which contains 1,000 observations on hourly wage rates, experience and other variables from thet 2008 CPS.
+	\begin{itemize}[<+->]
+	\item[a] Create a new variable called EXPER30 = EXPER - 30. Construct a scatter diagram with WAGE on the vertical axis and EXPER30 on the horizontal axis. Are any patterns evident?
+	
+	\item[b] Estimate by least squares the quadratic model $WAGE = \gamma_1 + \gamma_2(EXPER30)^2 + e$. Are the coefficient estimates statistically significant? Test the null hypothesis that $\gamma_2 \ge 0$ against the alternative that $\gamma_2 < 0$ at the $\alpha = .05$ level of significance. What conclusions do you draw?
+\end{itemize}	
+\end{frame}
+
+\begin{frame}{3.12 Continued I}
+
+\begin{itemize}[<+->]
+	\item[c] Using the estimation in part (b), compute the estimated marginal effect of experience upon wage for a person with 10 years' experience, 30 years' experience, and 50 years' experience. Are these slopes significantly different from zero at the $\alpha = .05$ level of significance?
+	
+	\item[d] Construct 95\% interval estimates of each of the slopes in part (c). How precisely are we estimating these values? \textit{Note, precision and accuracy are not the same thing!}
+	
+	\item[e] Using the estimation result from part (b) create the fitted values $\hat{WAGE} = \hat{\gamma}_1 + \hat{gamma}_2 (EXPER30)^2,$ where the hat denotes the least squares estimates. Plot these fitted values and $WAGE$ on the vertical axis of the same graph against EXPER30 on the horizontal axis. Are the estimates in part (c) consistent with the graph?
+	
+	
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{3.12 Continued II}
+
+\begin{itemize}[<+->]
+	
+	\item[f] Estimate the linear regression $WAGE = \beta_1 + \beta_2EXPER30 + e$ and the linear regression $WAGE = \alpha_1 + \alpha_2 EXPER + e$. What differences do you observe between these regressions and why do they occur? What is the estimated marginal effect of experience on wage from these regressions? Based on your work in parts (b)-(d), is the assumption of constant slope in this model a good one? Explain.
+	
+	\item[g] Use the larger data \texttt{cps4.dat} (4838 observations) to repeat parts (b), (c) and (d). How much has the larger sample improved the precision of the interval estimates in part (d)?
+\end{itemize}
+
+\end{frame}
+
+
+
+\end{document}

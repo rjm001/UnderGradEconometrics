@@ -1,0 +1,86 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage{import}
+\import{C:/Users/ryanj/Dropbox/code/LatexMacros/}{mymacros2.tex}
+
+
+%\usecolortheme{seahorse}
+%\usefonttheme{professionalfonts}
+
+%\usetheme{Berkeley}
+%\usecolortheme{beetle}
+
+%\usetheme[background=dark]{metropolis} %doesn't look good
+\usetheme{metropolis}
+\usecolortheme[snowy]{owl} %if remove snowy, it's dark
+
+
+\title{ Week 3 Discussion Section Questions }
+\author{Ryan Martin}
+
+
+\begin{document}
+
+	\maketitle
+
+
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+
+	\section{Question 1}
+	
+\begin{frame}[allowframebreaks]{3.6}
+
+In exercise 2.9 we considered a motel that had discovered that a defective product was used during construction. It took seven months to correct the defects, during which approximately 14 rooms in the 100-unit motel were taken out of service for one month at a time.The data are in motel.dat.
+	\begin{itemize}
+
+		\item[a] In the linear regression model $MOTEL\_PCT = \beta_1 + \beta_2 COMP\_PCT + e$, test the null hypothesis $H_0: \beta_2 \le 0$ against the alternative hypothesis $H_1: \beta_2 > 0$ at the $\alpha = .01$ level of significance. Discuss your conclusion. Include in your answer a sketch of the rejection region and a calculation of the p-value.
+		
+			\item[b] Consider a linear regression with $y = MOTEL\_PCT$ and $x = RELPRICE,$ which is the ratio of the price per room charged by the motel in question relative to its competitors. Test the null hypothesis that there is no relationship between these variables against the alternative that there is an inverse relationship between them, at the $\alpha = .01$ level of significance. Discuss your conclusion. Include in your answer a sketch of the rejection region and a calculation of the p-value. In this exercise follow and \textbf{show} all the test procedure steps suggested in Chapter 3.4
+			
+\item[c] Consider the linear regression $MOTEL\_PCT = \delta_1 + \delta_2 REPAIR + e$, where $REPAIR$ is an indicator variable taking the value 1 during the repair period and 0 otherwise. Test the null hypothesis $H_0: \delta_2 \ge 0$ against the alternative hypothesis $H_1: \delta_2 < 0$ at the $\alpha = .05$ significance level. Explain the logic behind stating the null and alternative hypotheses in this way. Discuss your conclusions.
+	
+		\item[d] Use the model given in part (c), construct a 95\% interval estimate for the parameter $\delta_2$ and give its interpretation. Have we estimated teh effect of the repairs on motel occupancy relatively precisely or not? Explain. \textit{Note: Precision and accuracy are not the same thing!}
+		
+		\item[e] Consider the linear regression $MOTEL\_PCT - COMP\_PCT$ and $x = REPAIR$, that is $$MOTEL\_PCT - COMP\_PCT = \gamma_1.$$ Test the null hypothesis $\gamma_2 = 0$ against the alternative that $\gamma_2 < 0$ at the $\alpha = .01$ level of significance. Discuss the meaning of the test outcome.
+		
+		\item[f] Using the model in part (e), construct and discuss the 95\% interval estimate of $\gamma_2$.
+
+
+	\end{itemize}
+
+\end{frame}
+
+
+
+\section{Question 2}
+
+\begin{frame}[allowframebreaks]{4.13}
+
+The file \texttt{stockton2.dat} contains data on 880 houses sold in Stockton, CA, during mid-2005. Variable descriptions are in the file \texttt{stockton2.def}. These data were considered in Exercises 2.12 and 3.11.
+
+\begin{itemize}
+	\item[a] Estimate the log-linear model $\log(PRICE) = \beta_1 + \beta_2 SQFT + e$. Interpret the estimated model parameters. Calculate the slope and elasticity at the sample means, if necessary.
+	\item[b] Estimate the log-log model $\log(PRICE) = \beta_1 + \beta_2 \log(SQFT) + e$. Interpret the estimated parameters. Calculate the slope and elasticity at the sample means, if necessary.
+	\item[c] Compare the $R^2$-value from the linear model $PRICE = \beta_1 + \beta_2 SQFT + e$ to the ``generalized'' $R^2$ measure for the models in (a) and (b).
+
+	\item[d] Construct histograms of the least squares residuals from each of the models in (a), (b), and (c) an dobtain the Jarque-Bera statistics. Based on your observations, do you consider the distributions of the residuals to be compatible with an assumption of normality?
+	
+	\item[e] For each of the models (a)-(c), plot the least squares residuals against SQFT. Do you observe any patterns?
+		
+	\item[f] For each model in (a)-(c) predict the value of a house with 2700 square feet.
+	
+	\item[g] For each model in (a) - (c) predict the value of a house with 2700 square feet.
+	
+	\item[h] Based on your work in this problem, discuss the choice of functional form. Which functional form would you use? Explain.
+	
+	
+\end{itemize}
+
+
+\end{frame}
+
+
+
+
+\end{document}

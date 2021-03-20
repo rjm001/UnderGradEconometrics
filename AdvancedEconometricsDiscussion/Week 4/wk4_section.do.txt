@@ -1,0 +1,355 @@
+capture log close _all
+
+*===============================================================================
+* Date: Feb 5, 2018
+* By: Conor Foley
+* 
+* This code walks through the demonstration problems for Discussion Questions in
+* week 4 of Econ 103 - Introduction to Econometrics, taught by Professor Rojas
+* 
+* Textbook is: Principles of Econometrics 4th Edition (Hill, Griffith, and Lim)
+*
+* Covered Problems: 4.15
+*
+* Note that this text will not appear in the log file, since it all comes before
+* we initiated the log
+*
+* If you want to run this program, you will need the following .dta files to
+* to be located in STATA's working directory:
+* (1) cps4.dta
+*
+*===============================================================================
+
+// Since we are using multiple log files, we need to use the "name" option so
+// STATA can refer to different log files in the do file.
+log using wk4_section_log, name(main) replace
+qui log using wk4_section_simple, name(simple) replace
+
+// Demonstration STATA code for week 4
+// Principles of Econometrics 4th Edition
+// Covered Problems: 4.15
+
+set more off
+clear all
+use cps4.dta, clear
+
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+/////////////////////////////// Question 4.15 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+********************************************************************************
+*Setup: Does the return to education differ by race and gender? In this exercise,
+* we will look at the following subsamples ("partitions") of the data:
+* (i) all males (ii) all females (iii) all whites (iv) all blacks
+* (v) white males (vi) white females (vii) black males (viii) black females
+*
+* Parts (A) - (E)
+********************************************************************************
+
+// Most of the work for this problem is repetitive. For that reason, I will
+// use a loop to generate the required results, and then report the output and
+// include some discussion. The "simple" log file will not record the commands
+// or the output from the loop, but will show results that I store. The "main"
+// log file will continuing recording the full do file.
+
+qui log off simple
+// Note that at the beginning of the file, we had initated 2 log file.
+// log off [name] tells STATA to stop recording using log file [name] where
+// name was set in the name option, and is NOT the name of the .smcl file
+// Since we have 2 log files running, wk4_section_log (name = main) will 
+// continuing recording while wk4_section_simple (name = simple) will not 
+// document running the loop
+
+
+//////////////////// Warning: Advanced STATA Usage Below \\\\\\\\\\\\\\\\\\\\\\\
+/////////////////// Exercise in How to Use Loops in STATA \\\\\\\\\\\\\\\\\\\\\\
+
+// Set variable for significance level at 5% significance
+// Used for hypothesis test in Part E
+scalar alpha = 0.05
+
+// Set variable for null for beta where beta = 0.1
+// Used for hypothesis test in Part E
+scalar nullBeta = 0.1
+
+// Generate log wage
+gen ln_wage = log(wage)
+
+// Use this loop to do all the exercises for the 8 partitions of the data:
+
+// Create a column vector of 0s for the values we want to store.
+// As we go through the loop, we will store values of interest in
+// the rows of the matrix
+//
+// Also, for each matrix, assign a column name to make it clear what value
+// is being stored
+//
+// command: matrix NAME = J(n,k,a) creates an n-by-k matrix, with all entries
+// set to the value a. A can be a number of ., where . means a missing value
+matrix store_values = J(8,11,0)
+matrix colnames store_values = "NumObs" "Wage_mean" "Wage_sd" "Wage_cv" ///
+								"Beta" "StdError" "RSqr" "RMSE" ///
+								"T:Beta=0.1" "TC_95%_2side" "Reject_Null"
+
+local starRow "********************************************************************************"
+
+gen condition = 0
+
+forvalues partition = 1/8 {
+	// at the beginning of each iteration, set condition = 0
+	replace condition = 0 
+	
+	// What the loop does:
+	// (1) depending on the value of the loop (1 through 8), set the value of
+	//     "condition" = 1 for the observations we want to isolate
+	// (2) add a new "element" to the local setRowNames describing which set of
+	//     observations is being used. Later, we will use this local to assign
+	//     names to the rows of the storage matrices. 
+	// (3) Display which loop number in the loop we've reached, and which 
+	//     observations are being used. Useful for troubleshooting as well as
+	//     reading the output in the log file wk4_section_log
+	// (4) For each partition, run the commands associated with each question:
+	//     (a) summary statistics of wage
+	//     (b) coefficient of variation for wage
+	//     (c) run OLS for ln_wage = b1 + b2*educ, interpret coefficient
+	//     (d) evaluate model fit (we use R2 and RMSE)
+	//     (e) test beta2 = 0.1 at 5% confidence, 2-sided test
+	if `partition' == 1 { // all men
+		replace condition = 1 if female == 0
+		local setRowNames "men"
+		local conditionName = "all men"
+	} 
+	else if `partition' == 2 { // all women
+		replace condition = 1 if female == 1
+		local setRowNames `setRowNames' "women"
+		local conditionName = "all women"
+	}
+	else if `partition' == 3 { // all whites
+		replace condition = 1 if white == 1 
+		local setRowNames `setRowNames' "white"
+		local conditionName = "all whites"
+	} 
+	else if `partition' == 4 { // all blacks
+		replace condition = 1 if black == 1
+		local setRowNames `setRowNames' "black"
+		local conditionName = "all blacks"
+	} 
+	else if `partition' == 5 { // white men
+		replace condition = 1 if white == 1 & female == 0
+		local setRowNames `setRowNames' "whtMen"
+		local conditionName = "white men"
+	} 
+	else if `partition' == 6 { // white women
+		replace condition = 1 if white == 1 & female == 1
+		local setRowNames `setRowNames' "whtWomen"
+		local conditionName = "white women"
+	} 
+	else if `partition' == 7 { // black men
+		replace condition = 1 if black == 1 & female == 0
+		local setRowNames `setRowNames' "blkMen"
+		local conditionName "black men"
+	} 
+	else if `partition' == 8 { // black women
+		replace condition = 1 if black == 1 & female == 1
+		local setRowNames `setRowNames' "blkWomen"
+		local conditionName = "black women"
+	} // if partition ... else if partition ...
+	
+	// Report where in the loop we are to results window
+	disp "`starRow'"
+	disp "Partition: `partition' - Condition: `conditionName'"
+	disp "`starRow'"
+	
+	// Part A: Summary statistics for WAGE, by partition
+	sum wage if condition == 1
+	matrix store_values[`partition',1] = r(N)
+	matrix store_values[`partition',2] = r(mean)
+	matrix store_values[`partition',3] = r(sd)
+		
+	// Part B: Coefficient of Variation for WAGE, by partition
+	matrix store_values[`partition',4] = 100*r(sd)/r(mean)
+	
+	// Part C: Run regression ln(WAGE) = beta1 + beta2*EDUC + e
+	reg ln_wage educ if condition == 1
+	
+	// Store beta and standard error for regression
+	matrix store_values[`partition',5] = _b[educ]
+	matrix store_values[`partition',6] = _se[educ]
+	
+	// Part D: Does model fit equally well for each partition?
+	// --> To evaluate this, we look at the R2 and RMSE
+	matrix store_values[`partition',7] = e(r2)
+	matrix store_values[`partition',8] = e(rmse)^2
+	
+	// Part E: Test the null hypothesis that the rate of return to education
+	// is 10% against the alternative that it is not, using a two-sided test at
+	// the 5% level of significance.
+	
+	// E-1: Calculte t-statistic for 10% return is equivalent to _b[educ] = 0.1
+	// set null beta = 0.1 earlier
+	matrix store_values[`partition',9] = (_b[educ]-`=nullBeta')/_se[educ]
+	
+	// E-2: Calculate critical value for 2-sided t-test at significance alpha
+	// alpha = 0.05 (set above)
+	// Since the degrees of freedom will vary from one regression to another, we
+	// need to calculate a different critical value for each. Given the large 
+	// overall size of the sample, the differences are unlikely to be 
+	// particularly large, however.
+	matrix store_values[`partition',10] = invttail(e(df_r), alpha/2)
+	
+	// E-3: Decide test
+	// Store a logical (0 or 1) value, based on whether we reject the null
+	// for a given regression. Since this is a 2-sided test, we compare the
+	// absolute value to the (positve) critical value
+	matrix store_values[`partition',11] = abs(store_values[`partition',9])>store_values[`partition',10]
+	
+
+} // end loop: forvalues partition
+
+// Assign row names for all the matrices we created earlier
+// have STATA report the list of all matrices in a local
+local allMatrices : all matrices 
+
+// Use foreach ... to loop over the matrices
+// Assign each matrix the set of rownames that we created during the loop above
+foreach x of local allMatrices {
+	matrix rownames `x' = `setRowNames'
+}
+
+//////////////////////////// End Advanced STATA Usage \\\\\\\\\\\\\\\\\\\\\\\\\\
+////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+// Begin recording with the "simple" log file
+qui log on simple
+
+********************************************************************************
+*4.15 Part A: For each sample partition, obtain the summary statistics of WAGE.
+********************************************************************************
+
+// Extract the columns we want from the store_values matrix using
+// number indexing
+matrix partA_values = store_values[1...,1..3] // rows 1 and on, columns 1-3
+
+// Have stata report the contents of a matrix using:
+// matrix list matName
+matrix list partA_values
+
+********************************************************************************
+*4.15 Part B: A variable's "coefficient of variation" (CV) is 100 times the ratio
+* of its sample standard deviation to its sample mean For a variable y, it is:
+*
+* CV = 100*se(y)/bar(y)
+*
+* It is a measure of variation that takes into account the size of the variable.
+* What is the coefficient of variation for WAGE within each sample partition?
+********************************************************************************
+
+// use column name Wage_cv as index to extract the appropriate column of store_values
+// store_values[1...,"Wage_cv"] is rows 1 and on, column with name Wage_cv
+matrix cvByPartition = store_values[1...,"Wage_cv"] 
+matrix list cvByPartition
+
+********************************************************************************
+*4.15 Part C: For each sample partition, estimate the log-linear model:
+*
+* ln(WAGE) = beta1 + beta2*educ + e
+* 
+* What is the approximate percentage return to another year of education for
+* each group?
+********************************************************************************
+
+// Can join matricies together by having one matrix to the left and one matrix
+// to the right by using [mat1, mat2]. Note, this only works if mat1 and mat2
+// have the same number of rows
+matrix partC_values = [store_values[1...,"Beta"], store_values[1...,"Beta"]*100]
+// Reset names of columns in partC_values - useful for display
+matrix colnames partC_values = "Beta" "BetaX100"
+matrix list partC_values
+
+// Since we have a log-linear regression, i.e. ln(y) = beta1+beta2*x+e 
+// the interpretation of the b2 coefficient is that a 1 unit increase in x leads 
+// to a b2*100 percent increase in y
+
+********************************************************************************
+*4.15 Part D: Does the model fit the data equally well for each sample 
+* partition?
+********************************************************************************
+
+// store_values[1...,"R2".."RMSE"] = rows 1 and on, columns from R2 to RMSE
+// Recall that R2 = 1 - (SSE/TSS) while RMSE = sqrt((1/df_r)*SSE)
+matrix partD_values = store_values[1...,"RSqr".."RMSE"]
+matrix list partD_values
+
+/* Discussion:
+
+The data fit in a broadly similar range for all (R^2 of 19-23) for all the models,
+except when we use the two smallest groups: black-by-gender. The model fits
+very poorly for black men but does its best for black women, which netted out
+to an average performance for the black partition as a whole. Notably, the model
+fits somewhat better for white men and white women separately than it does for
+whites as a whole. 
+
+*/
+
+********************************************************************************
+*4.15 Part E: For each sample partition, test the null hypothesis that the rate
+* of return to education is 10% against the alternative that it is not, using a
+* two-tail test at the 5% level of significance.
+********************************************************************************
+
+// One way to get columns 5-6 and 9-11
+matrix partE_values = [store_values[1...,5..6], store_values[1...,9..11]]
+matrix list partE_values
+
+/* Discussion:
+
+The table shows the betas for eduction, along with the standard error, the t-stat
+that the beta shown is equal to 0.1 (10% in decimal terms), the critical value,
+and a column of 1s and 0s where 1 indicates a rejection of the null and 0 a
+failure to reject. We can reject the null of beta = 0.1 to the downside for the 
+partitions men, whites, and white men; to the upside we can reject the null of
+beta = 0.1 for black women. For the other four partition (women, black, white women
+and black men) we fail to reject the null.
+
+A few comments: first note that the critical values change slightly from one
+regression to the next. This reflects the changes in the sample size. Notice also
+that the standard errors for black, black men, and black women are much larger,
+again reflecting the small sample sizes for these groups. This leads to differing
+conclusions - for example, the point estimate for black men is lower than the 
+point estimate for white men but we fail to reject the null for black men because
+the beta is so imprecisely (large standard error). Comparing black men to black
+women, however, we are able to reject the null because the fit of the model was
+better for black women than for black men (though there are more black women
+observations, the gap is small compared to black men vs. white men in the sample).
+
+*/
+
+//Comment: How to think about partitioned regressions
+//
+// One way to think of a regression partition is that it is equivalent to
+// interacting ALL the right-hand side variables with an indicator variable.
+// Below, we show how we get identical point estimates for the betas for male
+// vs. female when we partition and when we interact with female. 
+// 
+// Note that, while the betas are the same the standard errors are not. The 
+// standard errors differ because (1) the sigma_hat^2 for the interaction 
+// regression is a weighted average of the sigma_hat^2 estimates from the separate 
+// regressions, and (2) the interaction regression adjusts the standard errors 
+// using information about the relationship between the various RHS terms; 
+// information that is dropped from the separate regressions. More generally, the
+// interpretation of the OLS assumptions regarding the error term differ between
+// the interaction regression and the separate regressions.
+
+// put a constant in the regression by hand, rather than let STATA do it for us
+gen onesCol = 1
+
+reg ln_wage onesCol educ if female == 0, noconstant
+reg ln_wage onesCol educ if female == 1, noconstant
+reg ln_wage i.female#c.onesCol i.female#c.educ, noconstant
+
+
+//Convert log file (smcl) to pdf
+translate wk4_section_log.smcl "Week 4 TA Section STATA.pdf"
+translate wk4_section_simple.smcl "Week 4 TA Section STATA - Simple.pdf"
+
+log close _all

@@ -1,0 +1,200 @@
+---
+title: "Econ 103 Chapter 6 Discussion Questions"
+author: "Ryan Martin"
+date: "February 13, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Note, all questions are 6.3, 6.4 and 6.14. 6.3 is a hand problem
+
+# 6.3
+Consider the model $$y = \beta_1 + x_2 \beta_2 + x_3 \beta_3 + e$$ and suppose that application of least squares to 20 observations on these variables yields the following results 
+$$\begin{bmatrix}		b_1 \\ b_2 \\ b_3 \end{bmatrix}  = \begin{bmatrix} .96587 \\ .69914 \\ 1.7769 \end{bmatrix}$$ and $$\widehat{cov(b)} = \begin{bmatrix} .21812 & .019195 & -.050301 \\ .019195 & .048526 & -.031223 \\ -.050301 & -.031223  & .037120 \end{bmatrix} $$ with $$\hat{\sigma}^2 = 2.5193, \hspace*{1cm} R^2 = .9466$$
+	
+### a
+Find the total variation, unexplained variation and explained variation for this model
+	
+*Solution* Recall that the unexplainted variation is the SSE (sum of square errors). Also recall the definition of our variance estimate, $\hat{\sigma}^2 = \frac{1}{N-K}\sum_i (y_i - \hat{y}_i)^2 = \frac{1}{N-K}SSE$
+Plugging in and multiplying each side by N-K yields
+```{r}
+SSE = (20 - 3)*2.5193
+SSE
+```
+To get the other variations, we must recall $$R^2 = 1 - \frac{SSE}{SST} $$ and that, as \textit{as long as there is an intercept in the model} (which there is), $SSR + SSE = SST$. Algebra yields $$SST = \frac{SSE}{1 - R^2}$$ which we can now plug in to get
+
+```{r}
+SST = 42.8281/(1 - .9466)
+SSR = SST - SSE
+SST
+SSR
+```
+
+		
+### b
+Find 95\% interval estimates for $\beta_2$ and $\beta_3$.
+		
+*Solution*
+Our intervals are $b_j \pm t_{.975, 20-3} se(b_j)$ for each j = 1,2. This gives
+
+```{r}
+#b2:
+tc = qt(.975,20-3)
+.69914 + tc *sqrt(.04852)
+.69914 - tc *sqrt(.04852)
+
+
+#b3
+1.7769 + tc *sqrt(.03712)
+1.7769 - tc *sqrt(.03712)
+
+
+```
+
+		
+### c
+Use a t-test to test the hypothesis $H_0: \beta_2 \ge 1$ against the alternative $H_1: \beta_2 < 1$
+
+*Solution*
+```{r}
+b2 = .69914
+test_stat = (b2 - 1)/sqrt(.048526)
+test_stat
+tc #same as before
+abs(test_stat) <tc
+#true so fail to reject
+```
+
+		
+		
+### d
+Use your answers in part (a) to test the joint hypothesis $H_0: \beta_2 = 0, \beta_3 = 0$.
+
+*Solution* a joint test is an F-test. We have a test of two variables so our number of restristictions is J = 2. Recall that the F-statistic is given by $$F = \frac{(SSE_R - SSE_U)/J}{SSE_U/(N-K)}$$ where K is the number of coefficients in hte \textit{unrestricted} model and N is the number of observations. Also, $SSE_R$ is the sum of square errors in the restricted model and $SSE_U$ is the sum of squared errors in the full (or unrestricted) model. Our $SSE_U$ is the sum of squared errors we calculated in part a. K = 3 and N = 20. Now, all that is needed is $SSE_R$. 
+
+To get, $SSE_R$, notice that if $\beta_2 = 0$ and $\beta_3 = 0$, then our model is just an intercept. Recall that if our estimate is just an intercept, then the OLS estimate of the estimate is just the average y. That is, in the special case where $y = \beta_1$, $b_{R,1} = \bar{y}$ where the R stands for restricted. But this means that 
+\begin{align*}
+SSE_R & = \sum_i (y_i - b_{R,1})^2 \\
+& = \sum_i (y_i - \bar{y})^2 \tag{$\bar{y} solves OLS when only constant in model}\\
+& = SST
+\end{align*}
+So, \textit{in the special case of the constant estimate in the restricted model} $SSE_R = SST$. And we have SST from A. Plugging in, we get
+
+```{r}
+J = 2
+N = 20
+K = 3
+F.stat = ((SST- SSE)/J )/ (SSE/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = K)
+F.c
+F.stat>F.c #True so reject the null. 
+#At least one of the coeffients truly different from 0
+```
+
+
+		
+### e
+Test the hypothesis $H_0: 2 \beta_2 = \beta_3$  
+		
+*Solution* Note this is equivalent to the hypothesis $2 \beta_2 - \beta_3 = 0$. We can use a t-test. Our test-statistic is just $$t = \frac{2 b_2 - b_3 - 0}{se(2 b_2 - b_3)}.$$ Recall that $$se(2b_2 - b_3) = \sqrt{ 4 \widehat{var}(b_2) + (-1)^2\widehat{var}(b_3) - 2 \cdot 2 \cdot 1 \widehat{cov}(b_2, b_3)}$$
+
+Plugging in from the covariance matrix, we get
+```{r}
+b2 = .69914
+b3 = 1.7769
+my_se = sqrt(4*.04853 + .037120 - 4*(-.031223)) 
+test_stat = (2*b2 - b3)/my_se
+test_stat
+t_c = qt(.975, 20-3)
+t_c
+abs(test_stat) < t_c #TRUE so fail to reject H0
+```
+
+	
+# 6.4
+Consider the wage equation 
+\begin{align*}
+\log(WAGE) & = \beta_1 + \beta_2 EDUC + \beta_3 EDUC^2 + \beta_4 EXPER + \beta_5 EXPER^2\\ & \hspace*{1cm} + \beta_6 (EDUC \times EXPER) + \beta_7 HRSWK + e
+\end{align*}
+where the explanatory variables are years of education, years of experience and hours worked per week. Estimation results for this equation, and for modified versions of it obtained by dropping some of the variables, are displayed in Table 6.4. These results are from the 1000 observations in the file \texttt{cps4c\_small.dat}
+	
+### a Using an approximate 5\% critical value of $t_c = 2$, what coefficient estimates are not significantly different form zero?
+*Solution*
+		
+		
+### b
+What restriction on the coefficients of Eqn (A) gives Eqn(B)? Use an F-test to test this restriction. Show how the same eresult can be obtained using a t-test.
+		
+### c
+What restrictions on the coefficients of Eqn (A) gives Eqn(C)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+		
+### d
+What restrictions on the coefficients of Eqn (B) give Eqn (D)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+		 
+### e
+What restrictions on the coefficients of Eqn (A) give Eqn (E)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+		
+### f
+Based on your answers to parts (a) to (e), which model would you prefer? Why?
+		
+### g
+Compute the missing AIC value for Eqn (D) and the missing SC value for Eqn (A). Which model is favored by the AIC? Which model is favored by the SC?
+
+
+![](Table6_4.png)
+
+
+
+# 6.14
+
+Following on from the example in section 6.3, the file hwage.dat contains another subset of the data used by labor economist Tom Mroz. The variables with which we are concerned are 
+\begin{itemize} 
+		\item HW - Husband's wage in 2006 dollars
+		\item HE - Husband's education attainment in years
+		\item HA - Husband's age
+		\item CIT - a variable equal to one if living in a large city, otherwise zero.
+\end{itemize}
+### a 
+Estimate the model $$HW = \beta_1 + \beta_2 HE + \beta_3HA + e$$ What effects do changes in the level of education and age have on wages?
+	
+
+### b
+Does RESET suggest that the model in part (a) is adequate?
+	
+### c
+Add the variables $HE^2$ and $HA^2$ to the original equation and re-estimate it. Describe the effect that education and age have on wages in this newly estimated model. 
+	
+### d
+Does RESET suggest that the model in part (c) is adequate?
+
+### e
+Reestimate the model in part(c) with the variable CIT included. What can you say about the level of wages in large cities relative to outside those cities?
+	
+### f 
+Do you think $CIT$ should be included in the equation?
+	
+### g 
+For both the model estimated in part (c) and the model estimated in part (e) evaluate the following four derivatives:
+	
+	\begin{itemize}
+		\item $\frac{\partial HW}{\partial HE} $ for $HE = 6$ and $HE = 15$
+		\item $\frac{\partial HW}{\partial HA} $ for $HA = 35$ and $HA = 50$
+	\end{itemize}
+Does the omission of CIT lead to omitted-variable bias? Can you suggest why?
+
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "cps4_small.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+
+reg_out <- lm(data = dat, I(log(wage)) ~ educ + exper + hrswk)
+summary(reg_out)
+
+
+```

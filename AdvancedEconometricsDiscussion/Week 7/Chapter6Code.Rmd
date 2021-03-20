@@ -1,0 +1,593 @@
+---
+title: "Econ 103 Chapter 6 Discussion Questions"
+author: "Ryan Martin"
+date: "February 13, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Note, all questions are 6.3, 6.4 and 6.14. 6.3 is a hand problem
+
+# 6.3
+Consider the model $$y = \beta_1 + x_2 \beta_2 + x_3 \beta_3 + e$$ and suppose that application of least squares to 20 observations on these variables yields the following results 
+$$\begin{bmatrix}		b_1 \\ b_2 \\ b_3 \end{bmatrix}  = \begin{bmatrix} .96587 \\ .69914 \\ 1.7769 \end{bmatrix}$$ and $$\widehat{cov(b)} = \begin{bmatrix} .21812 & .019195 & -.050301 \\ .019195 & .048526 & -.031223 \\ -.050301 & -.031223  & .037120 \end{bmatrix} $$ with $$\hat{\sigma}^2 = 2.5193, \hspace*{1cm} R^2 = .9466$$
+	
+### a
+Find the total variation, unexplained variation and explained variation for this model
+	
+*Solution* Recall that the unexplainted variation is the SSE (sum of square errors). Also recall the definition of our variance estimate, $\hat{\sigma}^2 = \frac{1}{N-K}\sum_i (y_i - \hat{y}_i)^2 = \frac{1}{N-K}SSE$
+Plugging in and multiplying each side by N-K yields
+```{r}
+SSE = (20 - 3)*2.5193
+SSE
+```
+To get the other variations, we must recall $$R^2 = 1 - \frac{SSE}{SST} $$ and that, as \textit{as long as there is an intercept in the model} (which there is), $SSR + SSE = SST$. Algebra yields $$SST = \frac{SSE}{1 - R^2}$$ which we can now plug in to get
+
+```{r}
+SST = 42.8281/(1 - .9466)
+SSR = SST - SSE
+SST
+SSR
+```
+
+		
+### b
+Find 95\% interval estimates for $\beta_2$ and $\beta_3$.
+		
+*Solution*
+Our intervals are $b_j \pm t_{.975, 20-3} se(b_j)$ for each j = 1,2. This gives
+
+```{r}
+#b2:
+tc = qt(.975,20-3)
+.69914 + tc *sqrt(.04852)
+.69914 - tc *sqrt(.04852)
+
+
+#b3
+1.7769 + tc *sqrt(.03712)
+1.7769 - tc *sqrt(.03712)
+
+
+```
+
+		
+### c
+Use a t-test to test the hypothesis $H_0: \beta_2 \ge 1$ against the alternative $H_1: \beta_2 < 1$
+
+*Solution*
+```{r}
+b2 = .69914
+test_stat = (b2 - 1)/sqrt(.048526)
+test_stat
+tc #same as before
+abs(test_stat) <tc
+#true so fail to reject
+```
+
+		
+		
+### d
+Use your answers in part (a) to test the joint hypothesis $H_0: \beta_2 = 0, \beta_3 = 0$.
+
+*Solution* a joint test is an F-test. We have a test of two variables so our number of restristictions is J = 2. Recall that the F-statistic is given by $$F = \frac{(SSE_R - SSE_U)/J}{SSE_U/(N-K)}$$ where K is the number of coefficients in hte \textit{unrestricted} model and N is the number of observations. Also, $SSE_R$ is the sum of square errors in the restricted model and $SSE_U$ is the sum of squared errors in the full (or unrestricted) model. Our $SSE_U$ is the sum of squared errors we calculated in part a. K = 3 and N = 20. Now, all that is needed is $SSE_R$. 
+
+To get, $SSE_R$, notice that if $\beta_2 = 0$ and $\beta_3 = 0$, then our model is just an intercept. Recall that if our estimate is just an intercept, then the OLS estimate of the estimate is just the average y. That is, in the special case where $y = \beta_1$, $b_{R,1} = \bar{y}$ where the R stands for restricted. But this means that 
+\begin{align*}
+SSE_R & = \sum_i (y_i - b_{R,1})^2 \\
+& = \sum_i (y_i - \bar{y})^2 \tag{$\bar{y}$ solves OLS when only constant in model}\\
+& = SST
+\end{align*}
+So, \textit{in the special case of the constant estimate in the restricted model} $SSE_R = SST$. And we have SST from A. Plugging in, we get
+
+```{r}
+J = 2
+N = 20
+K = 3
+F.stat = ((SST- SSE)/J )/ (SSE/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #True so reject the null. 
+#At least one of the coeffients truly different from 0
+```
+
+
+		
+### e
+Test the hypothesis $H_0: 2 \beta_2 = \beta_3$  
+		
+*Solution* Note this is equivalent to the hypothesis $2 \beta_2 - \beta_3 = 0$. We can use a t-test. Our test-statistic is just $$t = \frac{2 b_2 - b_3 - 0}{se(2 b_2 - b_3)}.$$ Recall that $$se(2b_2 - b_3) = \sqrt{ 4 \widehat{var}(b_2) + (-1)^2\widehat{var}(b_3) - 2 \cdot 2 \cdot 1 \widehat{cov}(b_2, b_3)}$$
+
+Plugging in from the covariance matrix, we get
+```{r}
+b2 = .69914
+b3 = 1.7769
+my_se = sqrt(4*.04853 + .037120 - 4*(-.031223)) 
+test_stat = (2*b2 - b3)/my_se
+test_stat
+t_c = qt(.975, 20-3)
+t_c
+abs(test_stat) < t_c #TRUE so fail to reject H0
+```
+
+	
+# 6.4
+
+Consider the wage equation 
+
+\begin{align*}
+\log(WAGE) & = \beta_1 + \beta_2 EDUC + \beta_3 EDUC^2 + \beta_4 EXPER + \beta_5 EXPER^2\\ & \hspace*{1cm} + \beta_6 (EDUC \times EXPER) + \beta_7 HRSWK + e
+\end{align*}
+
+where the explanatory variables are years of education, years of experience and hours worked per week. Estimation results for this equation, and for modified versions of it obtained by dropping some of the variables, are displayed in Table 6.4. These results are from the 1000 observations in the file \texttt{cps4c\_small.dat}
+	
+### a 
+Using an approximate 5\% critical value of $t_c = 2$, what coefficient estimates are not significantly different form zero?
+*Solution*
+
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "cps4c_small.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+
+reg_out <- lm(data = dat, I(log(wage)) ~ educ + I(educ^2) + exper + I(exper^2) + educ:exper + hrswk)
+summary(reg_out)
+
+
+```
+Looking at the t-values, we see educ, and the interaction term $educ \times exper$ are not significant at the .95 level
+		
+### b
+What restriction on the coefficients of Eqn (A) gives Eqn(B)? Use an F-test to test this restriction. Show how the same results can be obtained using a t-test.
+
+*Solution* Looking at the table, we see just the interaction term is missing from B. One term can be done with either an F-test or a t-test. 
+
+```{r}
+N = 1000
+J = 1
+K = 7
+SSE_U = 222.4166
+SSE_R = 222.6675
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #False so fail to reject the null.
+  #The coeefficient is likely 0 (or doesn't improve our model)
+1 - pf(F.stat,df1 = J, df2 = N - K) #p-value of F-test
+
+#t-test
+test_stat = -.000510/.000482
+2*pt(test_stat, df = N-K) #exact same pvalue!
+```
+
+		
+### c
+What restrictions on the coefficients of Eqn (A) gives Eqn(C)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+
+*Solution* Restrict $\beta_4 = 0 = \beta_5, \beta_6$. Now the test is easy, just copy, paste and edit. We conclude that, given the data, at least one of these coefficients is likely nonzero. That is, at least one of Experience or Experience squared or Experience interacted with education, has predictive power for wages.
+		
+```{r}
+N = 1000
+J = 3
+K = 7
+SSE_U = 222.4166
+SSE_R = 233.8317
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #Reject the null.
+  #At least one coefficient is likely nonzero
+1 - pf(F.stat,df1 = J, df2 = N - K)
+
+```
+		
+		
+### d
+What restrictions on the coefficients of Eqn (B) give Eqn (D)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+		 
+
+*Solution* Restrict $\beta_2 = 0 = \beta_3$. We conclude that, given the data, at least one of these coefficients is likely nonzero. That is, at least Education or Education squared has an influence on wages.
+		
+```{r}
+N = 1000
+J = 2
+K = 6 #reduced by 1 because B is our full model
+SSE_U = 222.6674
+SSE_R = 280.5061
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #Reject the null.
+  #At least one coefficient is likely nonzero
+1 - pf(F.stat,df1 = J, df2 = N - K)
+
+
+
+```
+
+
+### e
+What restrictions on the coefficients of Eqn (A) give Eqn (E)? Use an F-test to test these restrictions. What question would you be trying to answer by performing this test?
+
+		 
+
+*Solution* Restrict $\beta_2 = 0 = \beta_6$. Fail to reject the null. We conclude that, given the data, $\beta_2$ and $\beta_6$'s exclusion from the model does not significantly change the model's explained variance. 
+		
+```{r}
+N = 1000
+J = 2
+K = 7 #reduced by 1 because B is our full model
+SSE_U = 222.4166
+SSE_R = 223.6716
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #False, Fail to Reject the null.
+  #beta_2 and beta_6 likely 0 in comparison. That is, 
+  #beta_2 and beta_6's exclusion from the model does not significantly 
+  #reduce the variation explained by the model
+1 - pf(F.stat,df1 = J, df2 = N - K)
+
+
+
+```
+
+		
+### f
+Based on your answers to parts (a) to (e), which model would you prefer? Why?
+
+*Solution* Probably B or E. They acheiveve relatively good prediction without unneeded regressors.
+
+### g
+Compute the missing AIC value for Eqn (D) and the missing SC value for Eqn (A). Which model is favored by the AIC? Which model is favored by the SC?
+
+*Solution* Model B is favored by the AIC. Model E Is favored by the SC.
+To calculate AIC, recall
+$$AIC = \log \left (\frac{SSE}{N} \right) + \frac{2K}{N}$$
+while calculating SC utilizes the formula
+$$SC = \log \left (\frac{SSE}{N} \right) + \frac{K \log(N)}{N}$$
+Note that SC is almost always referred to (outside of this text) as BIC (Bayesian Information Criterion).
+
+Plugging into these formulas leaves us with 
+
+```{r}
+modelE_SC = log(222.4166/1000) + 7*log(1000)/1000
+modelA_AIC = log(280.5061/1000) + 2*4/1000
+modelA_AIC
+modelE_SC
+
+```
+
+
+
+![](Table6_4.png)
+
+
+
+# 6.14
+
+Following on from the example in section 6.3, the file `hwage.dat` contains another subset of the data used by labor economist Tom Mroz. The variables with which we are concerned are 
+\begin{itemize} 
+		\item HW - Husband's wage in 2006 dollars
+		\item HE - Husband's education attainment in years
+		\item HA - Husband's age
+		\item CIT - a variable equal to one if living in a large city, otherwise zero.
+\end{itemize}
+### a 
+Estimate the model $$HW = \beta_1 + \beta_2 HE + \beta_3HA + e$$ What effects do changes in the level of education and age have on wages?
+	
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "hwage.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+
+reg_out <- lm(data = dat, hw ~ he + ha)
+summary(reg_out)
+```
+
+The current estimates have increases in $HE$ and $HA$ positively increasing wages. All coefficients are significant at the .05 level.
+
+### b
+Does RESET suggest that the model in part (a) is adequate?
+
+*Solution* To test RESET, we had $\hat{y}$ to the regression and see if it is significant.
+
+```{r, echo = F, eval = F}
+#doesn't work just adding mypred! need to add the higher powers
+#otherwise multicolinearity issue (?)
+dat2 = cbind(dat, mypred = reg_out$fitted.values)
+dat2 <- as.data.frame(dat2)
+reg_out2 <- lm(data = dat2, hw ~ he + ha + mypred )
+summary(reg_out2)
+
+```
+
+```{r, echo = F, eval = F}
+#doesn't work just adding mypred! need to add the higher powers
+#otherwise multicolinearity issue (?)
+dat2 = cbind(dat, mypredsq = reg_out$fitted.values^2,
+             mypredcu = reg_out$fitted.values^3)
+dat2 <- as.data.frame(dat2)
+reg_out2 <- lm(data = dat2, hw ~ he + ha + mypredsq )
+summary(reg_out2)
+
+reg_out3 <- lm(data = dat2, hw ~ he + ha + mypredsq + mypredcu)
+summary(reg_out3)
+
+#F-test
+N = nrow(dat)
+J = 2
+K = 4 
+SSE_U = sum((reg_out3$residuals)^2)
+SSE_R = sum((reg_out$residuals)^2)
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #True, reject the null. One of these coefficients is likely
+    #nonzero. 
+1 - pf(F.stat,df1 = J, df2 = N - K)
+
+
+```
+
+All in all, RESET tells us, (through the significance on the residuals squared), that the original model is inadequate. Both methods of testing RESET reject the null of no misspecification.
+	
+### c
+Add the variables $HE^2$ and $HA^2$ to the original equation and re-estimate it. Describe the effect that education and age have on wages in this newly estimated model. 
+
+```{r}
+reg_outv2 <- lm(data = dat, hw ~ he + ha + I(he^2) + I(ha^2))
+summary(reg_outv2)
+```
+Note the more complicated story these regressions paint. the linear terms and the quadratic terms are opposite in sign, implying a decreasing then increasing relationship for $HE$ and an increasing then decreasing relationship for $HA$ (because the squared term will dominate as the terms grow)
+	
+### d
+Does RESET suggest that the model in part (c) is adequate?
+
+*Solution*
+Repeating the RESET test on our larger model.
+```{r}
+
+dat2 = cbind(dat, mypredsq = reg_out$fitted.values^2,
+             mypredcu = reg_out$fitted.values^3)
+dat2 <- as.data.frame(dat2)
+reg_out2v2 <- lm(data = dat2, hw ~ he + ha + mypredsq +
+                   I(he^2) + I(ha^2))
+summary(reg_out2v2)
+
+reg_out3v2 <- lm(data = dat2, hw ~ he + ha + mypredsq + mypredcu +
+                   I(he^2) + I(ha^2))
+summary(reg_out3v2)
+
+#F-test
+N = nrow(dat)
+J = 2
+K = 6 
+SSE_U = sum((reg_out3v2$residuals)^2)
+SSE_R = sum((reg_outv2$residuals)^2)
+F.stat = ((SSE_R- SSE_U)/J )/ (SSE_U/(N - K))
+F.stat
+F.c = qf(.95, df1 = J, df2 = N - K)
+F.c
+F.stat>F.c #False, fail to reject the null. None of the terms
+    #appear necessary 
+1 - pf(F.stat,df1 = J, df2 = N - K)
+
+```
+Our data passes both RESET tests of misspecification.
+
+### e
+Reestimate the model in part(c) with the variable CIT included. What can you say about the level of wages in large cities relative to outside those cities?
+
+*Solution* Note that cit is a binary random variable, taking 0 if the person is not inside a city and 1 if the person is in a big city. From the coefficient, larger cities seem to have much higher expected wages than small cities. 
+
+```{r}
+reg_outv3 <- lm(data = dat, hw ~ he + ha + I(he^2) + I(ha^2) +
+                  cit)
+summary(reg_outv3)
+cor( cbind(dat$he, dat$ha, dat$cit)) #not too strong
+```
+
+	
+### f 
+Do you think $CIT$ should be included in the equation?
+
+*Solution*
+It's t-statistic says it is a statistically significant variable. It makes sense that there is a bump in wages from cities, too. Thus, leaving it in seems fine and perhaps most appropriate.
+	
+### g 
+For both the model estimated in part (c) and the model estimated in part (e) evaluate the following four derivatives:
+	
+\begin{itemize}
+\item $\frac{\partial HW}{\partial HE}$ for $HE = 6$ and $HE = 15$
+\item $\frac{\partial HW}{\partial HA}$ for $HA = 35$ and $HA = 50$
+\end{itemize}
+Does the omission of CIT lead to omitted-variable bias? Can you suggest why?
+
+*Solution*
+Our model in part c has $$HW = \beta_1 + \beta_2 HE + \beta_3 HA + \beta_4 HE^2 + \beta_5 HA^2$$
+Thus, for our model from (c):
+$$\frac{\partial HW}{\partial HE} = \beta_2 + 2 \beta_4 HE^2$$ and
+$$\frac{\partial HW}{\partial HA} = \beta_3 + 2 \beta_5 HA^2$$
+
+
+Note that the model from part (e) has the same derivatives! It's just the coefficients are changing in value with the inclusion of CIT. So, plugging in the numbers we get the following marginal effects
+
+```{r}
+#Model from (c)
+
+##marginal with respect to he
+coef(reg_outv2)[2] + 2* coef(reg_outv2)[4]*6 #at 6
+coef(reg_outv2)[2] + 2* coef(reg_outv2)[4]*15 #at 15
+
+
+
+##marginal with respect to ha
+coef(reg_outv2)[3] + 2* coef(reg_outv2)[5]*6 #at 35
+coef(reg_outv2)[3] + 2* coef(reg_outv2)[5]*15 #at 50
+
+
+#Model from e,
+
+##marginal with respect to he
+coef(reg_outv3)[2] + 2* coef(reg_outv3)[4]*6 #at 6
+coef(reg_outv3)[2] + 2* coef(reg_outv3)[4]*15 #at 15
+
+##marginal with respect to ha
+coef(reg_outv3)[3] + 2* coef(reg_outv3)[5]*6 #at 35
+coef(reg_outv3)[3] + 2* coef(reg_outv3)[5]*15 #at 50
+```
+
+Note that the estimated marginal effects are lower in model e, uniformly (that is, for all points, the models in c have larger marginal effects than the corresponding estimates from part e). This makes sense, since people in the city tend to marry later and have higher education. So, the positive correlation between $HE$ and $CIT$ as well as between $HA$ and $CIT$ was leading to positive bias of the estimates
+
+Indeed, recall from equation 6.23 of the text that the bias should be $bias(b_x) = \beta_{CIT} \hat{cov}(CIT, x)/ \hat{var}(x)$ where $\beta_{CIT}$ is the true coefficient on $CIT$, $b_x$ is the estimated coefficient of $x$ and x is either $HA$ or $HE$. Thus, since the coefficient on $CIT$ is positive, positive correlation between $CIT$ and $x$ corresponds to positive bias. The positive correlation is confirmed by the correlation matrix I calculated in part (e)
+
+# 6.22
+
+In Chapter 5.7 we used the data in file pizza4.dat to estimate the model $$PIZZA = \beta_1 + \beta_2 AGE + \beta_3 INCOME + \beta_4 (AGE \times INCOME) + e$$
+
+### a
+Test the hypothesis that age does not affect pizza expenditure - that is, test the joint hypothesis $H_0 \beta_2 = 0, \beta_4 = 0$. What do you conclude?
+
+```{r}
+
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "pizza4.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+attach(dat)
+reg_out_unr <- lm(data = dat, pizza ~ age*income)
+summary(reg_out_unr)
+reg_out_res <- lm(data = dat, pizza ~ income)
+summary(reg_out_res)
+
+#R's built in f-test method
+anova(reg_out_unr, reg_out_res)
+
+#or, do it by hand
+F.test = ( (sum(reg_out_res$residuals^2) - 
+            sum(reg_out_unr$residuals^2) )/2)/
+        (sum(reg_out_unr$residuals^2)/(nrow(dat) - 3))
+F.test
+1 - pf(F.test, 2, nrow(dat) - 3)
+#Note, the same!
+```
+
+
+### b
+Construct point estimates and .95 CI for the marginal propensity to spend on pizza for individuals of ages 20, 30, 40, 50 and 55. Comment on these estimates.
+
+*solution*
+marginal propensity to spend is just $\beta_3 + \beta_4 \times AGE$.
+
+```{r}
+my_cov_mat <- vcov(reg_out_unr)
+my_cov_mat
+
+#as a function
+age = 20
+my_CI_func <- function(my_age) {
+se.mp = as.numeric(sqrt( my_cov_mat[3,3] + my_age^2*my_cov_mat[4,4] + 
+                2*my_age*my_cov_mat[3,4]))
+my_est = as.numeric(reg_out_unr$coefficients[3] + 
+      reg_out_unr$coefficients[4]*my_age)
+t.c = qt(.975, nrow(dat) - 3)
+cup = my_est + t.c*se.mp
+clower = my_est - t.c*se.mp
+out = list(my_est, se.mp, cup, clower)
+names(out) <- c("estimate", "se", "Upper", "Lower")
+return(out)
+}
+
+my_CI_func(20)
+my_CI_func(30)
+my_CI_func(40)
+my_CI_func(50)
+my_CI_func(55)
+
+```
+
+### c
+Modify the equation to permit a "life-cycle" effect in which the marginal effect of income on pizza expenditure increases with age, up to a point, then falls. Do so by adding the term $(AGE^2 \times INC)$ to the model. What sign do you anticipate on this term? Estimate the model and test the significance of the coefficient for this variable. Did the estimate have the expected sign?
+
+*Solution* We expect increasing into early adulthood, then decreasing when health concerns and more money make you not want pizza as much. Thus, a negative sign on $AGE^2 \times INC$ is expected, since this will dominate for large ages. This predicted sign is not what we see in the regression. It seems, over the range of ages, $age\times income$ and $age^2 \times income$ move together (we'll see the evidence of this in part f), which may be why we don't get the sign here
+
+```{r}
+reg_out_unr_2 <- lm(data = dat, pizza ~ age*income + I(age^2*income))
+summary(reg_out_unr_2)
+
+```
+
+
+### d
+Using the model in (c) e marginal propensity to spend on pizza for individuals of ages 20, 30, 40, 50 and 55. Comment on these estimates. In light of these values and of the range of the age in the sample data, what can you say about the quadratic function of age that describes the marginal propensity to spend on pizza?
+
+*Solution* Now marginal propensity to spend on pizza is $$\beta_3 + \beta_4 \times AGE + \beta_5 \times AGE^2$$ Note that the standard error would be a little painful to calculate. That's why they only have us do the estimate
+
+The quadratic function of age is always increasing over the interval. We see that because the marginal effect is always positive, but decreasingly positive.
+
+```{r}
+summary(dat$age) #age is between 18 and 55. Median 32
+
+
+my_cov_mat <- vcov(reg_out_unr_2)
+my_cov_mat
+
+#as a function
+age = 20
+my_CI_func_2 <- function(my_age) {
+my_est = as.numeric(reg_out_unr_2$coefficients[3] + 
+      reg_out_unr_2$coefficients[5]*my_age +
+      reg_out_unr_2$coefficients[4]*my_age^2)
+return(my_est)
+}
+
+my_CI_func_2(20)
+my_CI_func_2(30)
+my_CI_func_2(40)
+my_CI_func_2(50)
+my_CI_func_2(55)
+
+
+```
+
+
+### e
+For the model in part (c), are each of the coefficient estimates for AGE $(AGE \times INC)$ and $(AGE^2 \times INC)$ significantly different from 0 at a 5\% level? Carry out a joint test for the signifiance of these variables. Comment on your results.
+
+*Solution* Just use the R built in for this one, to do the F-test. Note, they are not jointly significantly different from 0 at the .05 level. That is, the test fails to reject the null that both of the coefficients are 0.
+
+```{r}
+model_res <- lm(data = dat, pizza ~ age + income)
+anova(reg_out_unr_2, model_res )
+```
+
+
+### f
+Check the model used in part (c) for collinearity. Add the term ($AGE^3 \times INC$) to the model in (c) and check the resulting model for collinearity.
+
+*Solution* Remember, a large vif would be anything over 5. These vifs are very large! We indeed have collinearity,
+
+```{r}
+reg_alt <- lm(data = dat, pizza ~
+                age*income + I(age^2*income) + 
+                I(age^3*income))
+#install.packages("olsrr")
+library(olsrr)
+ols_vif_tol(reg_out_unr_2)
+ols_vif_tol(reg_alt)
+
+```
+As a side note, this package "olsrr" is very nice! Check out more here https://cran.r-project.org/web/packages/olsrr/vignettes/regression_diagnostics.html or at their site www.rsquaredacademy.com 

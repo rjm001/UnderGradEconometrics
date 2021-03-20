@@ -1,0 +1,305 @@
+---
+title: "Week 4 Code"
+author: "Ryan Martin"
+date: "January 24, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Reminders for Exam
+- Take a calculator to calculate p-values
+- Bring ID cards
+- Be sure to work through past exams, review stata code (all code learned from lab lecture notes should be enough for this class)
+- Bring a watch and manage your time carefully
+- Double check your work if you have time.
+- Familiarize yourself with the formula sheet. There is a lot on there!
+- If a question is unclear about the significance level or kind of test, you should ask! But the default is typically two-sided, .95
+
+# Chapter 4 Brief Notes
+
+- f for forecast error
+
+- BLUE vs BLUP. Best Linear Unbiased Estimator. Best Linear Unbiased Predictor,
+yhat is blup, b1 and b2 (these are the betahats, the estimators) are blue.
+
+
+- $$var(f) = \sigma^2 [1 + \frac{1}{N} + \frac{(x_0 - \bar{x})^2}{\sum (x_i - \bar{x})^2}]$$
+
+$var(f)$ is decreasing in N, variation in explanatory variable, and as the point of interest is closer to the mean and as $\sigma^2$ (the variance of noise term $e$ ) decreases
+
+- estimate of variance of forecast error $$\widehat{var(f)} = \hat \sigma^2 [1 + \frac{1}{N} + \frac{(x_0 - \bar{x})^2}{\sum (x_i - \bar{x})^2}]$$
+
+- prediction interval is $\hat{y_0} \pm t_c se(f)$
+- compare with CI for a point on the regression line corresponding to $x = x_0$, $b_1 + x_0 b_2:$   $b_1 + x_0 b_2 \pm t_c se(b_1 + x_0 b_2)$
+
+- Note, in linear regression $\hat{y_0} = b_1 + b_2 x_0$, $\frac{\hat{\sigma^2}}{\sum(x_i - \bar{x})^2} = \hat{var(b_2)}$
+
+- SST = SSR + SSE. SST = $\sum(y_i - \bar{y})^2$. SSR is $\sum(\hat{y_i} - \bar{y})$, SSE is $\sum\hat{e_i}^2$
+
+- $R^2 := SSR/SST = 1 - SSE/SST$ (definition!). So, closer $R^2$ is to 1, the closer SSE is to 0. Measure of how well your model predicts the data. Interpretation of $R^2$ is proportion of variation in y about its mean that is explained by regression model.
+
+- sample correlation coefficient, $r_{xy} = \frac{s_{xy}}{s_x s_y}$ measures strength of linear association between x and y. Note that $r_{xy}^2 = R^2 \ge 0$ (because square) in simple (bivariate, 2 term) regression model. Also note that $R^2 = r_{y \hat{y}}^2$ as well. The second one holds true in more complicated (multiple) regressions. NOte, ``y'' here is the dependent variable - the variable on the left hand side. For example, for a log-linear regression, $$\log (price) = \beta_1 + beta_2 quantity$$, $y = \log(price)$, so your $R^2$ in this case is $R^2 = r_{\log(price), \hat{log}(price)}$ 
+
+- How to choose fits:
+1. Choose shapes that are consistent with economic theory
+2. Choose shapes that are sufficiently flexible to fit the data
+3. Choose shapes so SR1-SR6 are verified (can use diagnostic residual plots).
+
+
+4.5.3 Prediction in Log-Linear Model.
+
+
+- Consider the estimated regression equation $\widehat{ln(y)} = b_1 + b_2x$. To predict y  from our predictions of $\widehat{ln(y)}$ we use either $\hat{y_n}$ or $\hat{y_c}.$
+
+- $y_n$ is defined by
+$$\hat{y_n} = \exp(\widehat{ln(y)}) = exp(b_1 + b_2x)$$
+This one is a natural one and actually probably best for small sample sizes (under 30). This is also the the one we have been using so far in the course.
+
+- Alternatively, $y_c$ is defined by
+$\hat{y_c} := \exp(b_1 + b_2 x + \hat{\sigma^2}/2) = \hat{y}_ne^{\hat{\sigma}^2/2}$ This is for larger samples. It's derivation is shown in appendix 4c, from properties of log-normal distribution
+
+- Note, $y_c$ is not as good in smaller samples because $\hat{\sigma}^2$ is unlikely to be accurate in small samples.
+
+- Note, since $\hat \sigma^2 \ge 0$, this correction increases the value of our prediciotn. The natural predictor tends to systematically underpredict the value of y in a log-linear model.
+
+- If $\hat{y_n}$ denotes the natural predictor, we can define the generalized $R^2$ for the log-linear model as $R_g^2:= r_{y\hat{y_n}}^2$ This is in contrast to the standard $R^2$, mentioned above, which would be $R^2 = r_{log y, \widehat{\log}(y)}^2$. Further note that $$corr(aX, Y)= \frac{cov(aX, Y)}{\sqrt{var(aX) var(Y)}} = \frac{a cov(X, Y)}{|a| \sqrt{var(X) var(Y)}} = sign(a) corr(X, Y)$$ where $$sign(a) = \begin{cases} 1 \text{ if } a > 0 \\ 0 \text{ if } a = 0 \\ - 1 \text{ if } a < 0 \end{cases}$$ Finally, we can therefore conclude, that since $e^{\hat {\sigma}^2/2} y_n = y_c$ and $e^{\hat {\sigma}^2/2} > 0$, that $corr(\hat{y}_n, y) = corr(\hat{y}_c, y)$ and so $R_g^2 = r_{y, \hat{y_n}}^2 = r_{y, \hat{y_c}}^2$ for the linear and log-linear models.
+
+
+- Note $R^2$ is a.k.a. coefficient of determination.
+
+- Interval prediction for log-linear model does NOT use corrected predictors. It uses the natural predictor, $\hat{y_n}$. recall $f$ is the forecast error; $f = \hat{y_n} - y$ We have $[\exp(\widehat{ln(y)} - t_c se(f)), \exp(\widehat{ln(y)} + t_c se(f))]$
+
+4.6 Log-Log: $log(y) = \beta_1 + \beta_2 log(x)$
+
+
+- Here, slope is elasticity. \%change response in y per 1 \% change in x.
+
+- Note, the correction here is similar form as the correction in log-linear. $\hat{y_c} = \hat{y_n}e^{\hat{\sigma}^2/2} = \exp(b_1 + b_2 log x) e^{\hat{\sigma}^2/2}$. The generalized R^2 is still used, $R_g^2 = corr(y, \hat{y_c})$
+
+
+# 4.15
+
+Does the return to education differ by race and gender? For this exercise, use the file \texttt{cps4.dat} (This is a large file with 4,838 observations. If you are using the student version of Stata software, you can use the smaller file \texttt{cps4\_small.dat}. If you are using R, the size shouldn't be a problem. R runs into problems around the 10 million entries point, whereupon you may need to do some fancier technique and use some packages, but can still get the job done without paying.) In this exercise you will extract subsamples of observations consisting of (i) all males, (ii) all females (iii) all whites, (iv) all blacks, (v) white males, (vii) black males and (vii) black females.
+	
+### a
+For each sample partition, obtain the summary statistics of $WAGE$
+
+```{r}
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "cps4.dta", sep = "/")
+library(haven)
+dat <- read_stata(my_file)
+
+dat_male <- dat[dat$female==0,]
+dat_female <- dat[dat$female==1,]
+dat_white <- dat[dat$white==1,]
+dat_black <- dat[dat$black==1,]
+dat_wm <- dat[( (dat$white==1)&(dat$female==0) ),]
+dat_bm <- dat[( (dat$black==1)&(dat$female==0) ),]
+dat_bf <- dat[( (dat$black==1)&(dat$female==1) ),]
+
+#creating a list to hold all datasets
+#so can write loops in code
+dat_list <- list(dat_male,
+                 dat_female,
+                 dat_white,
+                 dat_black,
+                 dat_wm,
+                 dat_bm,
+                 dat_bf)
+my_names = c( "male",
+                 "female",
+                 "white",
+                 "black",
+                 "white and male",
+                 "black and male",
+                 "black and female")
+m = length(dat_list)
+count = 1
+for (mydat in dat_list){
+  print( paste("This is the data subset of everyone who is", 
+               my_names[count]))
+  count = 1 + count
+  print("Summary Statistics of this subset:")
+  print(summary(mydat$wage))
+}
+
+
+
+```
+
+
+### b
+A variable's \textit{coefficient of variation} is 100 times the ratio of its sample standard deviation to its sample mean. That is, for a variable y it is $$CV(y):= 100 \times \frac{s_y}{\bar{y}}$$ where $s_y$ is $y$'s standard deviation and $\bar{y}$ is $y$'s average. What is the coefficient of variation for $WAGE$ within each sample partition?
+	
+```{r}
+CV = rep(0,m) #creating vector to hold CV estimates
+counter = 1
+for (mydat in dat_list){
+  CV[counter] = 100*sd(mydat$wage) /mean(mydat$wage)
+  counter = 1 + counter
+}
+names(CV) <- paste("CV", my_names) #note, paste can be vectorized
+  #which means it will create a vector with each entry
+  # CV and the my_names entry at that position, pretty cool
+CV
+
+```
+
+
+![Figure to help problem solving](C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Discussion Code/Week 3/Table4point1.png)
+
+	
+### c 
+For each sample partition, estimate the log-linear model $$\log(WAGE) = \beta_1 + \beta_2 EDUC + e$$ What is the approximate percentage return to another year of education for each group?
+*Solution*: Note, by the table from the text pictured in this file, the percentage return is $100 \times \beta_2$. This is the percent change in y for a 1 unit change in x. 
+
+```{r}
+reg_out_vec <- vector(mode = "list", length = m)
+returns_vec <- rep(0,m)
+counter = 1
+for (mydat in dat_list){
+  s <- lm(I(log(mydat$wage)) ~ mydat$educ)
+  reg_out_vec[[counter]] <- s
+  print( paste("This is the data subset of everyone who is", 
+               my_names[counter]))
+  print(summary(s))
+  returns_vec[counter] <- as.numeric(coef(s)[2]*100)
+  print("The semielasticity for this group is")
+  print(as.numeric(coef(s)[2]*100))
+  counter = 1 + counter
+  print("The R squared for this group is")
+  w <- summary(s)
+  print(w$r.squared)
+}
+
+```
+
+	
+### d
+Does the model fit the data equally well for each sample partition?
+
+*Solution* No one data partition stands out as being particularly poorly fit by the model to me. Note, I like to use plots to diagnose fit quality. However, this chapter is emphasizing using the $R^2$ to diagnose fit quality. So, we could see the variation in $R^2$ of the model and compare which fit "best" in the sense of explaining variation. From $R^2$ estimates (above in c) we see none of the $R^2$ are particularly good, but black and male is much lower than the rest whereas black and female is the highest. The low $R^2$ in general is evident in the wide spread of points around estimated average outcome.
+
+```{r}
+
+#Looking at fits
+for (i in 1:m){
+  
+  title1 <- paste("Regression in Log-Space, Subset: ", my_names[i],
+                  sep = "")
+  #Log transformed space
+  plot( dat_list[[i]]$educ, log(dat_list[[i]]$wage ), main = title1)
+  abline(reg_out_vec[[i]],col='red')
+  
+  #Regular space
+  my_dat_frame <- cbind(dat_list[[i]]$educ,
+        exp(reg_out_vec[[i]]$fitted.values))
+  
+  colnames(my_dat_frame) <- c("educ","log_fit")
+  my_dat_frame <- data.frame(my_dat_frame)
+  my_dat_frame_sorted <- my_dat_frame[order(my_dat_frame$educ),] 
+        #orders the data in increasing education,
+        #so can connect the lines
+  
+  title2 <- paste("Regression in Wage-Education Space, Subset: ",
+                  my_names[i],
+                  sep = "")
+  plot( dat_list[[i]]$educ, dat_list[[i]]$wage , main = title2)
+  lines( my_dat_frame_sorted$educ, my_dat_frame_sorted$log_fit,
+         col = 'red')
+  
+  
+}
+
+
+```
+
+	
+### e
+
+For each sample partition, test the null hypothesis that the rate of return to education is 10\% against the alternative that it is not, using a two-tail test at the 5\% level of significance.
+
+*Solution* For each subset of people, our test is
+$H_0: 100 \times \beta_2 = 10\%$
+$H_1: 100 \times \beta_2 \ne 10\%$
+
+Note that our test statistic is therefore $t_{stat} = \frac{\hat{\beta}_2 \times 100 - 10}{se(\hat{\beta_2} \times 100)} = \frac{\hat{\beta}_2 - .10}{se(\hat{\beta_2})}$
+
+```{r}
+#Note the critical value depends on the number of data points
+#(through degree of freedom). 
+t_c_vec <- rep(0,m)
+test_stat.vec  = rep(0,m)
+p_val_vec <- rep(0,m)
+for (i in 1:m){
+  s <- summary(reg_out_vec[[i]])
+  test_stat = (coef(s)[2,1] -   .10)/( coef(s)[2,2])
+  test_stat.vec[i] = test_stat
+  t_c <- pt(.975,reg_out_vec[[i]]$df.residual)
+  t_c_vec[i] <- t_c
+    #note reg_out_vec[[i]]$df.residual = nrow(my_dat[[i]]) - 2
+  print( paste("Subset: ", my_names[i]))
+  print( paste("Test Statistic:", test_stat))
+  print( paste("Critical Value:", t_c))
+  print( paste("Reject the Null?", abs(test_stat)>t_c ))
+  p_val <- 2*(1 - pt(abs(test_stat), df = 
+                           reg_out_vec[[i]]$df.residual))
+  p_val_vec[i] = p_val
+  print( paste("P-value: "))
+}
+
+
+#Two-sided p-value plot example
+#Then use this new data.frame with geom_polygon
+my_plots <- vector("list", m)
+
+for( i in 1:m){
+p_val <- p_val_vec[i]
+test_stat <- test_stat.vec[i]
+support = -700:700/100
+plot_data <- as.data.frame(cbind(support, 
+                   probability = dt(support, nrow(dat)-2)))
+#note shade order changed
+shade <- as.data.frame(rbind( 
+               subset(plot_data, support < -abs(test_stat)), 
+               c( -abs(test_stat),0)))
+               #c(0, plot_data[nrow(plot_data), "support"])))
+names(shade) <- c("x","y")
+shade2 <- as.data.frame(rbind( 
+              c(abs(test_stat),0),
+               subset(plot_data, subset = support > abs(test_stat)),
+               c(plot_data[nrow(plot_data), "support"], 0)))
+names(shade2) <- c("x2","y2")
+
+
+library(ggplot2)
+my_plots[[i]] <- ggplot(data = plot_data, aes(x = support, y= probability))  + 
+  geom_line() +
+  annotate("text", x =-4, y = .15, label = 
+             paste("Prob = ", round(p_val,5), sep = "")) + 
+  geom_polygon(data = shade, aes(x,y )) +
+  geom_polygon(data = shade2, aes(x2,y2 )) +
+  ggtitle("P-value of Test Statistic")  +
+  geom_vline(xintercept = abs(test_stat), col = 'red'  ) +
+ geom_vline(xintercept = - abs(test_stat), col = 'red'  ) +
+  ggtitle( paste("Subset: ", my_names[i]))
+}
+
+my_plots[[1]]
+my_plots[[2]]
+my_plots[[3]]
+my_plots[[4]]
+my_plots[[5]]
+my_plots[[6]]
+my_plots[[7]]
+```
+
+	
+	
+	
+	

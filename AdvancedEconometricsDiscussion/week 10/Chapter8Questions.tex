@@ -1,0 +1,48 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage{import}
+\import{C:/Users/ryanj/Dropbox/code/LatexMacros/}{mymacros2.tex}
+
+\usetheme{metropolis}
+\usecolortheme[snowy]{owl}
+
+
+\title{ Chapter 8 Discussion Questions}
+\subtitle{Question 8.22}
+\author{Ryan Martin}
+
+
+\begin{document}
+
+	\maketitle
+
+
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+
+	\section{Question 1}
+	
+	\begin{frame}[allowframebreaks]{8.22}
+	In Exercise 7.7 we considered a model designed to provide information to mortgage lenders. They want to determine borrower and loan factors that may lead to delinquency or foreclosure. In the file \texttt{lasvegas.dat}, there are 1000 observations on mortgages for single-family homes in Las Vegas, Nevada during 2008. The variable of interest is DELINQUENT, an indicator variable = 1 if the borrower missed at least three payments (90+ days late), but 0 otherwise. Explanatory variables are LVR = the ratio of the loan amount to the value of the property; REF = 1 if purpose of the loan was a ``refinance'' and 0 if the loan was for a purchase; INSUR = 1 if mortgage carries mortgage insurance, 0 otherwise; RATE = initial interest rate of the mortgage; AMOUNT = dollar value of mortgage (in \$100,000); CREDIT = credit score, TERM = number of years between disbursement of the loan and the date it is expected to be fully repaid, ARM = 1 if mortgage has an adjustable rate, and 0 if the mortgage has a fixed rate.
+	
+	\begin{itemize}
+		\item[a] Estimate the linear probability (regression) model explaining DELINQUENT as a function of the remaining variables. Use the White test with cross-product terms included to test for heteroskedasticity. Why did we include the cross-product terms?
+		\item[b] Use the estimates from (a) to estimate the error variances for each observation. How many of these estimates are at least one? How many are at most 0? How many are less than .01?
+		\item[c] Prepare a table containing estimates and standard errors from estimating the linear probability model in each of the following ways:
+		\begin{itemize}
+			\item[i.] Least squares with conventional standard errors.
+			\item[ii.] Least squares with heteroskedasticity-robust standard errors
+			\item[iii.] Generalized least squares omitting observations with variance less than .01.
+			\item[iv.] Generalized least squares with variance less than .01 changed to .01
+			\item [v] Generalized least squares with variance less than .00001 changed to .00001.
+		\end{itemize} 
+		Discuss and compare the different results.
+		\item[d] Using the results from (iv.), interpret each of the coefficients. Mention whether the signs are reasonable and whether they are significantly different from 0.
+	\end{itemize}
+
+\end{frame}
+
+
+
+
+\end{document}

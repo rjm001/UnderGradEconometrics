@@ -1,0 +1,341 @@
+---
+title: "Econ 103L -  Week 1 Minimum Working Example"
+author: "Ryan Martin"
+date: "January 8, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message= F)
+knitr::opts_chunk$set(warning = F)
+```
+
+
+# Discussion Problems
+
+## Aside, Models and Interpretation.
+
+In this class, there will be several models that will pop up repeatedly.
+
+In this class, there will be several models that will pop up repeatedly.
+
+1. Linear 
+Model:
+$$y = \beta_1 + \beta_2x + e$$
+Predictive form: $\hat{y} = \hat{\beta}_1 + \hat{\beta_2} x$ and $\frac{d \hat{y}}{dx} = \hat{\beta_2}$. So, here $\hat{\beta_2}$ is exactly the slope.
+
+
+2. log-linear Model: $$\log y = \beta_1 + \beta_2x + e $$ Predictive Form: $\log \hat{y} = \hat{\beta}_1 + \hat{\beta_2}x.$  Note here that $\frac{\%\Delta \hat{y}}{\Delta x} \approx 100 \times \frac{d \hat{y}}{d x} \frac{1}{\hat{y}} = 100 \times \hat{\beta_2}$ and thus $100 \times \hat{\beta_2}$ can be interpreted as the percent change in predicted y for a 1 unit change in x (or $\hat{\beta_2}$ can be interpreted as the fraction change in y for a 1 unit change in x). In this case, $\hat{\beta_2}$ is called the semi-elasticity.
+
+3. log transformed Model: $$y = \beta_1 + \beta_2 \log x + e$$ Predictive Form: $\hat{y} = \hat{\beta}_1 + \hat{\beta_2} \log x$. Note here that $\frac{d \hat{y}}{dx} = \hat{\beta_2}/x$. Thus $\hat{\beta_2} = x \frac{d \hat{y}}{dx} \approx \frac{ \Delta \hat {y} }{\frac{1}{100} \% \Delta x} = 100 \times \frac{ \Delta \hat {y} }{ \% \Delta x}.$ That is, $\frac{1}{100}\hat{\beta_2}$ can be interpreted as the change in predicted y for a 1 percent change in x.
+
+4. log-log: $$\log y = \beta_1 + \beta_2 \log x + e$$ Predictive Form: $\log \hat{y} = \hat{\beta}_1 + \hat{\beta_2} \log x.$ Thus, $\frac{dy}{dx} \frac{1}{\hat{y}} = \hat{\beta_2} \frac{1}{x}$ which implies $\hat{\beta_2} = \frac{d \hat{y}}{dx} \frac{x}{y} \approx \frac{100}{100} \frac{\% \Delta y}{ \% \Delta x} =  \frac{\% \Delta y}{ \% \Delta x}$ is (interpreted as) the elasticity of the predicted y with respect to the x variable. That is, it is the expected percent change in $y$ for a 1 percent change in $x$.
+
+
+## 2.6 
+
+A soda vendor at Louisiana State University football games observes that more sodas are sold the warmer the temperature at game time is. Based on 32 home games covering five years, the vendor estimates the relationship between soda sales and temperature to be $$\hat{y} = - 240 + 8x$$ where $y$ is the number of sodas she sells and x is the temperature in degrees Fahrenheit
+
+### a
+Interpret the estimated slope and intercept. Do the estimates make sense? Why or why not?
+
+*Solution* Since it's a line, the slope is just 8. (It is worth remembering for later that this could be done with calculus as well, especially in more complicated - nonlinear - relationships.) This says that for every single degree fahrenheit increase in temperature, our best estimate is that the vendor sells 8 more sodas. This has soda sales increasing with temperature, which is what was described above. The number does not seem crazy, although I have little experience with soda sales to know how reasonable it is.
+
+### b
+On a day when the temperature at game time is forecast to be $80^\circ$ F, predict how many sodas the vender will sell.
+
+
+*Solution:* 
+
+```{r}
+-240 + 8*80
+```
+
+### c
+Below what temperature are the predicted sales zero?
+
+*Solution:* 30, because $$0 = -240 + 8 \times \text{zero\_sale\_temp}$$ and solve
+
+
+### d
+Sketch a graph of the estimated regression line
+
+```{r}
+x <-  30:110
+y <-  -240 + 8*x
+plot(x,y, xlab = "Temperature (in F)", ylab = "Estimated Sodas Sold (in cans)", 
+     main = "Estimated Sodas sold vs Time",type = 'l')
+```
+
+Note that very few of the actual data points (maybe none!) will fall on the line for most real-world datasets!
+
+### Stata Solution
+
+#### Quick note on running Stata
+*Code graciously provided by Conor Foley. All mistakes are my own.*
+
+*Note, without downloading (and paying for) Stata or using a school computer, you may be able to run it remotely from here:*
+
+https://software.library.ucla.edu/Citrix/SoftwareWeb/
+
+You have to play with it a little, but you can upload data files to the remote server and move code on your clipboard (i.e. that you have copied/ctrl +c) into the remote server. Use the navigation buttons on the top.
+
+There are other options, but this one seems to be the easiest. It takes some effort to explore UCLA's computing options, since different departments offer different resources. If you find a better solution, let me know.
+
+
+## 2.15
+
+### R Solution
+
+How much does education affect wage rates? The data file $\texttt{cps4\_small.dat}$ contains 1000 observations on hourly wage rates, education and other variables from the 2008 Current Population Survey (CPS).
+
+#### a
+Obtain the summary statistics and histograms for the variables $WAGE$ and 
+$EDUC$. Discuss the data characteristics.
+
+*Solution*
+
+Note that R can easily read in Stata files (`.dta`) with the right package (e.g. `haven`).  Note that the # sign comments out a line.
+
+```{r}
+#You should set it to your own working directory
+#Note that the \ slashes are the default, but you have to change these to
+#either double backslashes or / as I did
+# file location from computer: C:\Users\ryanj\Dropbox\TA\Econ 103\Winter 2018\Data
+my_wd <- "C:/Users/ryanj/Dropbox/TA/Econ 103/Winter 2018/Data/s4poe_statadata"
+my_file <- paste(my_wd, "cps4_small.dta", sep = "/")
+
+#to read in stata files, need special package (many exist)
+#install.packages('haven') #must run if haven't installed it yet
+library(haven)
+dat <- read_stata(my_file)
+    #could also use
+    #haven::read_stata(my_file)
+    #for questions, type ?read_stata or ?haven::read_stata
+
+#Take a look
+#View(dat)
+
+
+
+#################################################
+#First looking at wage
+#################################################
+
+#refer to items with dollar sign
+#these autocomplete, type the dollar sign then hit tab and choose from the
+#dropdown menu. much easier than remembering the names
+#these are the built in plots
+summary(dat$wage) #5 number summary
+boxplot(dat$wage, main = "Box and Whisker Plot for Wage")
+hist(dat$wage)
+
+#Note, ggplot2 has some fancier plots
+#install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(dat = dat, aes(wage, ..density..)) +
+  geom_histogram() +
+  geom_density(col = 'red') + 
+  ggtitle("Wage Histogram and Density Estimate")
+
+
+
+
+########################################################
+#Education
+#######################################################
+
+
+
+summary(dat$educ) #5 number summary
+boxplot(dat$educ, main = "Box and Whisker Plot for Wage")
+
+## Education is discrete, so we go with a barplot
+ggplot(dat = dat, aes(educ)) +
+  geom_bar() + 
+  ggtitle("Education Bar Plot")
+
+```
+
+**Discusion**
+Wages seem to have a long right tail (skew left). Education has two peeks at 12 (high school graduate) and 16 (college graduate). The outliers for education are in the lower education levels.
+
+#### b
+
+Estimate the linear regression $WAGE = \beta_1 + \beta_2EDUC + e$ and discuss the results
+
+*Solution*
+
+```{r}
+attach(dat)
+reg_out <- lm(wage ~ educ + 1)
+summary(reg_out)
+
+#Plot using base functions
+plot(educ, wage, main = "wage vs education and best fit in red")
+abline(reg_out, col = "red")
+
+#make a little fancier with ggplot
+race  <- rep("white", nrow(dat))
+race[black == 1] <- "black"
+race[asian == 1] <- "asian"
+
+my_coef <- reg_out$coefficients
+my_coef
+
+dat2 <-  cbind(dat, race) #adds extra column to dat
+ggplot(data = dat2, aes(x= educ, y = wage, color = race)) +
+  geom_point() +
+  geom_abline(aes(intercept = my_coef[1], 
+                  slope = my_coef[2] )) + 
+  ggtitle("Wage vs Education with Best Fit in Black")
+
+```
+
+The results say that the best *linear* predictor for wage in terms of race is $$WAGE = -6.71 + 1.98 \times EDUC.$$ This predicts that 1 extra year of education gets an additional 1.98 dollars per hour in wages.
+
+#### c
+
+Calculate the least squares residuals and plot them against $EDUC$. Are any patterns evident? If assumptions $SR1-SR5$ hold, should any patterns be evident in the least squares residuals?
+
+*Solution*
+
+Recall the assumptions (treating dependent variables as given, a.k.a. conditioning on it):
+
+- SR1: The linear model is correct
+- SR2: The errors are mean 0
+- SR3: The errors are homoskedastic
+- SR4: the errors are uncorrelated
+- SR5: dependent variable (e.g. x) is treated as given but is not a constant (i.e. takes at least two values)
+- SR6: (optional) errors are normally distributed
+
+
+If the assumptions hold, there should be no change in the residual point spread as a function of education. (This is SR2 and SR3, in particular) It seems here that the residual variance does have some dependence on education. This suggests that our (linear) model may be the incorrect dependency.
+
+```{r}
+resid <- reg_out$residuals
+gender <- rep("male", nrow(dat))
+gender[dat$female==1] <- "female"
+
+dat3 <- cbind(dat2, resid,gender)
+ggplot(data=dat3,aes(x = educ, y = resid, color = race) ) +
+  geom_point()
+
+
+#repeat by gender
+ggplot(data=dat3,aes(x = educ, y = resid, color = gender) ) +
+  geom_point()
+
+```
+
+
+
+
+#### d
+Estimate separate regressions for males, females, blacks, and whites. Compare the results.
+
+*Solution* There is a little ambiguity here. Is it just males, just females, just blacks and just whites. Or is it males and black, males and white, females  and black, females and white? I will assume the first but I think both interpretations are reasonable
+
+One point of comparison is the returns to education, which is the estimated slope. Note that males get lower returns to education than women and whites have lower returns to education than blacks. At the same time, we see that the intercept term, which corresponds to predicted wage with 0 education. Here, male is larger than female and white is larger than black.
+
+Since males have higher initial wages but lower returns to education than females, do males or females have higher wages as high school graduates and as college graduates? The calculations are done below. Our regressions predict that males make more than females as high school graduates, with two years of college, and with 4 years of college. Similarly, our regressions predict whites make more than blacks at these four points in educational attainment as well.
+
+**Note** We will learn how to do these later much more quickly and easily in one regression, with indicator variables and interaction effects.
+
+```{r}
+dat_male <- dat3[dat$female!=1,]
+dat_female <- dat3[dat$female==1,]
+dat_black <- dat3[dat$black==1,]
+dat_white <- dat3[dat3$race=="white",]
+  #could also use (dat$black!=1) & (dat$asian!=1)
+
+reg_male <- lm(data = dat_male, wage ~ educ)
+reg_female <- lm(data = dat_female, wage ~ educ)
+reg_white <- lm(data = dat_white, wage ~ educ)
+reg_black <- lm(data = dat_black, wage ~ educ)
+summary(reg_male)
+summary(reg_female)
+summary(reg_black)
+summary(reg_white)
+
+new.dat <- data.frame(educ = c(12,14,16))
+predict.lm(reg_male, newdata =new.dat)
+predict.lm(reg_female, newdata =new.dat)
+predict.lm(reg_white, newdata =new.dat)
+predict.lm(reg_black, newdata =new.dat)
+```
+
+
+
+#### e
+Estimate the quadratic regression $WAGE = \alpha_1 + \alpha_2 EDUC^2 + e$ and discuss the results. Estimate the marginal effect of another year of education on wage for a person with 12 years of education and for a person with 14 years of education. Compare these values to the estimated marginal effect of education from the linear regression in part (b). 
+
+*Solution*
+We see the coefficient on $educ^2$ is estimated to be .0735. The marginal effect of education on wage is the derivative of wage with respect to education, which is $2 \times educ$. Thus, in the quadratic model, the returns are .88 dollars per hour and 1.02 dollars per hour for 12 and 14 years respectively. This is in comparison with the original linear model. For the linear model, the returns to education are constant (slope, take the derivative if confused) and estimated to be 1.98. Thus, our new model has smaller marginal returns to education for the 12th to 13th year and the 14th to 15th year.
+
+```{r}
+attach(dat3)
+quad_reg <- lm(wage ~ 1 + I(educ^2)) #note, must use I()!
+    #because it's a formula object
+summary(quad_reg)
+
+quad_reg_coef <- quad_reg$coefficients
+quad_reg_coef
+12*quad_reg_coef[2]
+14*quad_reg_coef[2]
+```
+
+
+#### f
+Plot the fitted linear model from part (b) and the fitted values from the quadratic model from part (e) in the same graph with the data on $WAGE$ and $EDUC$. Which model appears to fit the data better? 
+
+*Solution* The plots are below. The quadratic fit appears better.
+
+*Note, there are actually many, many formal ways of testing which model fits better. The problem is called model selection*
+
+```{r}
+
+quad_wage_est = quad_reg_coef[1] + sort(educ,decreasing = F)^2*quad_reg_coef[2]
+
+plot(educ, wage)
+abline(reg_out, col = "red")
+lines(sort(educ,decreasing = F), quad_wage_est,col="blue")
+#abline(quad_reg, col = "blue") #doesn't work
+
+dat4 <- cbind(dat3,quad_wage_est)
+ggplot(data = dat4) +
+  geom_point(aes(x = educ, y = wage, color = "points")) +
+  geom_point(aes(x = sort(educ,decreasing = F), y = quad_wage_est,color = 'quadratic Estimate')) +
+  geom_abline(intercept = my_coef[1], slope = my_coef[2])
+```
+
+
+#### g 
+Construct a histogram of $ln(WAGE)$ (Note, log is usually natural log now too, even though in grade school it was the abbreviation for the base-10 log). Compare the shape of this histogram to that for $WAGE$ from part (a). Which appears more symmetric and bell-shaped?
+
+*Solution* Histogram is below. This one is much more symmetric and bell-shaped.
+
+```{r}
+hist(log(dat$wage))
+```
+
+
+#### h
+Estimate the log-linear regression $\log(WAGE) = \gamma_1 + \gamma_2 EDUC + e$. Estimate the marginal effect of another year of education on wage for a person with 12 years of education and for a person with 15 years of education. Compare these values to the estimated marginal effects of education from the linear regression in part (b) and the quadratic equation in part (e).
+
+*Solution* Using implicit differentation, taking the derivative of both sides with respect to education, we have $$\frac{1}{\widehat{WAGE}} \frac{d \widehat{WAGE}}{d EDUC} = \hat{\gamma}_2$$ and thus the marginal effect of wage on education is $\widehat{WAGE} \times \hat{\gamma}_2$ Thus, our estimate is $$\hat{gamma}_2 \widehat{WAGE}  = \gamma_2 \times \exp(\gamma_1 + \gamma_2 EDUC)$$\footnote{In chapter 4, we will learn a better predictor of $\widehat{WAGE}$} So the marginal effect of 1 more year of schooling for a person with 12 years is or 14 years is 1.338 dollars per hour and 1.603. These numbers are a little higher than the earlier quadratic estimates but a little lower than the linear estimates.
+
+```{r}
+log_wage <- log(wage)
+log_dat <- cbind(dat3,log_wage)
+log_reg <- lm(dat = log_dat, log_wage ~ educ)
+summary(log_reg)
+log_coef <- log_reg$coefficients
+
+#marginal estimates at 12 and 14 years of education
+log_coef[2] *exp(log_coef[1] + log_coef[2]* 12)
+log_coef[2] *exp(log_coef[1] + log_coef[2]* 14)
+```
+
